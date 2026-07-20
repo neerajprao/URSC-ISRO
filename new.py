@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from scipy.optimize import differential_evolution
 from numba import njit
 import warnings
@@ -48,22 +49,23 @@ def compute_fitness_core(cx, cy, masses, hl, hw, clearance, req_d_matrix, num_co
         if cg_penalty > 1e11:
             return cg_penalty
 
-    # 2. SCREENING STEP: GLOBAL 2D Clearance Overlaps
+    # 2. SCREENING STEP: LOCAL 2D Clearance Overlaps (Same-Side Only)
     overlap_penalty = 0.0
     for i in range(num_components):
         for j in range(i + 1, num_components):
-            diff_x = abs(abs_x[i] - abs_x[j])
-            diff_y = abs(cy[i] - cy[j])
-            req_dx = hl[i] + hl[j] + clearance
-            req_dy = hw[i] + hw[j] + clearance
-            
-            if req_dx > diff_x and req_dy > diff_y:
-                overlap_penalty += (req_dx - diff_x) * (req_dy - diff_y) * 1e6
+            if is_back_side[i] == is_back_side[j]:
+                diff_x = abs(abs_x[i] - abs_x[j])
+                diff_y = abs(cy[i] - cy[j])
+                req_dx = hl[i] + hl[j] + clearance
+                req_dy = hw[i] + hw[j] + clearance
+                
+                if req_dx > diff_x and req_dy > diff_y:
+                    overlap_penalty += (req_dx - diff_x) * (req_dy - diff_y) * 1e6
                 
     if overlap_penalty > 1e10:
         return cg_penalty + overlap_penalty
 
-    # 3. DETAILED STEP: Pin Insert Safe Distances
+    # 3. DETAILED STEP: Pin Insert Safe Distances (Global Across Layers)
     insert_penalty = 0.0
     for i in range(num_components):
         i_start = offset_indices[i]
@@ -84,7 +86,7 @@ def compute_fitness_core(cx, cy, masses, hl, hw, clearance, req_d_matrix, num_co
                     xj_abs = abs_x[j] + ( -flat_offsets[idx_j, 0] if is_back_side[j] else flat_offsets[idx_j, 0] )
                     yj_abs = cy[j] + flat_offsets[idx_j, 1]
                     
-                    dist = np.sqrt((xi_abs - xj_abs)**2 + (yi_abs - yj_abs)**2)
+                    dist = np.sqrt((xi_abs - xj_abs)**2 + (yj_abs - yj_abs)**2)
                     if req_dist > dist:
                         insert_penalty += (req_dist - dist) * 1e6
                         
@@ -127,7 +129,6 @@ def run_optimization():
     for comp in data['COMPONENTS'].get('BACK', []):
         raw_components_to_process.append((comp, True))
 
-    # --- NEW: Quantity Suffix Handling Expansion Logic ---
     components_to_process = []
     for comp, is_back in raw_components_to_process:
         qty = int(comp.get('Object qty', 1))
@@ -280,6 +281,7 @@ def run_optimization():
                 final_cg_x = np.sum(abs_x_positions * masses) / total_mass
                 final_cg_y = np.sum(cy_v * masses) / total_mass
                 
+                # ------------------- IMAGE 1: STANDARD MULTI-FACE REPORT -------------------
                 fig = plt.figure(figsize=(18, 10))
                 gs = fig.add_gridspec(2, 2, height_ratios=[7, 2.2], hspace=0.25)
                 
@@ -316,42 +318,46 @@ def run_optimization():
                     if not is_back_side[i]: 
                         ex, ey = cx_v[i], cy_v[i]
                         if element_shapes[i] == 'rectangle':
-                            ax_f.add_patch(plt.Rectangle((ex - lengths[i]/2 - clearance, ey - widths[i]/2 - clearance), lengths[i] + 2*clearance, widths[i] + 2*clearance, fill=False, edgecolor='green', alpha=0.4, linestyle='--'))
-                            ax_f.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.8, edgecolor='navy'))
+                            ax_f.add_patch(plt.Rectangle((ex - lengths[i]/2 - clearance, ey - widths[i]/2 - clearance), lengths[i] + 2*clearance, widths[i] + 2*clearance, facecolor='#A9C7EB', edgecolor='none', alpha=0.5))
+                            ax_f.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.9, edgecolor='navy', linewidth=1.5))
                         else:
-                            ax_f.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, fill=False, edgecolor='green', alpha=0.4, linestyle='--'))
-                            ax_f.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.8, edgecolor='navy'))
+                            ax_f.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, facecolor='#A9C7EB', edgecolor='none', alpha=0.5))
+                            ax_f.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.9, edgecolor='navy', linewidth=1.5))
                         
                         for ii in range(offset_counts[i]):
                             dx, dy = flat_offsets[i_start + ii]
-                            ax_f.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson'))
-                        ax_f.text(ex, ey, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold')
+                            ax_f.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson', zorder=4))
+                            ax_b.add_patch(plt.Circle((-(ex + dx), ey + dy), ins_rad, facecolor='crimson', edgecolor='#5C0612', linewidth=1.5, alpha=0.6, zorder=3))
+                            
+                        ax_f.text(ex, ey, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
                         
                         ex_trace_b = -cx_v[i]
                         if element_shapes[i] == 'rectangle':
-                            ax_b.add_patch(plt.Rectangle((ex_trace_b - lengths[i]/2, cy_v[i] - widths[i]/2), lengths[i], widths[i], fill=False, linestyle=':', edgecolor='gray', alpha=0.5))
+                            ax_b.add_patch(plt.Rectangle((ex_trace_b - lengths[i]/2, cy_v[i] - widths[i]/2), lengths[i], widths[i], fill=False, linestyle='--', edgecolor='navy', linewidth=1.2, alpha=0.7))
                         else:
-                            ax_b.add_patch(plt.Circle((ex_trace_b, cy_v[i]), lengths[i]/2, fill=False, linestyle=':', edgecolor='gray', alpha=0.5))
+                            ax_b.add_patch(plt.Circle((ex_trace_b, cy_v[i]), lengths[i]/2, fill=False, linestyle='--', edgecolor='navy', linewidth=1.2, alpha=0.7))
                     
                     else:
                         ex_b, ey_b = cx_v[i], cy_v[i]
                         if element_shapes[i] == 'rectangle':
-                            ax_b.add_patch(plt.Rectangle((ex_b - lengths[i]/2 - clearance, ey_b - widths[i]/2 - clearance), lengths[i] + 2*clearance, widths[i] + 2*clearance, fill=False, edgecolor='green', alpha=0.4, linestyle='--'))
-                            ax_b.add_patch(plt.Rectangle((ex_b - lengths[i]/2, ey_b - widths[i]/2), lengths[i], widths[i], color='darkgreen', alpha=0.8, edgecolor='darkslategrey'))
+                            ax_b.add_patch(plt.Rectangle((ex_b - lengths[i]/2 - clearance, ey_b - widths[i]/2 - clearance), lengths[i] + 2*clearance, widths[i] + 2*clearance, facecolor='#A3D1A3', edgecolor='none', alpha=0.5))
+                            ax_b.add_patch(plt.Rectangle((ex_b - lengths[i]/2, ey_b - widths[i]/2), lengths[i], widths[i], color='darkgreen', alpha=0.9, edgecolor='darkslategrey', linewidth=1.5))
                         else:
-                            ax_b.add_patch(plt.Circle((ex_b, ey_b), lengths[i]/2 + clearance, fill=False, edgecolor='green', alpha=0.4, linestyle='--'))
-                            ax_b.add_patch(plt.Circle((ex_b, ey_b), lengths[i]/2, color='darkgreen', alpha=0.8, edgecolor='darkslategrey'))
+                            ax_b.add_patch(plt.Circle((ex_b, ey_b), lengths[i]/2 + clearance, facecolor='#A3D1A3', edgecolor='none', alpha=0.5))
+                            ax_b.add_patch(plt.Circle((ex_b, ey_b), lengths[i]/2, color='darkgreen', alpha=0.9, edgecolor='darkslategrey', linewidth=1.5))
                         
                         for ii in range(offset_counts[i]):
                             dx, dy = flat_offsets[i_start + ii]
-                            ax_b.add_patch(plt.Circle((ex_b + dx, ey_b + dy), ins_rad, color='orange'))
-                        ax_b.text(ex_b, ey_b, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold')
+                            ax_b.add_patch(plt.Circle((ex_b + dx, ey_b + dy), ins_rad, color='orange', zorder=4))
+                            ax_f.add_patch(plt.Circle((-(ex_b + dx), ey_b + dy), ins_rad, facecolor='orange', edgecolor='#733D00', linewidth=1.5, alpha=0.6, zorder=3))
+                            
+                        ax_b.text(ex_b, ey_b, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
                         
                         ex_trace_f = -cx_v[i]
                         if element_shapes[i] == 'rectangle':
-                            ax_f.add_patch(plt.Rectangle((ex_trace_f - lengths[i]/2, cy_v[i] - widths[i]/2), lengths[i], widths[i], fill=False, linestyle=':', edgecolor='gray', alpha=0.5))
+                            ax_f.add_patch(plt.Rectangle((ex_trace_f - lengths[i]/2, cy_v[i] - widths[i]/2), lengths[i], widths[i], fill=False, linestyle='--', edgecolor='darkslategrey', linewidth=1.2, alpha=0.7))
                         else:
-                            ax_f.add_patch(plt.Circle((ex_trace_f, cy_v[i]), lengths[i]/2, fill=False, linestyle=':', edgecolor='gray', alpha=0.5))
+                            ax_f.add_patch(plt.Circle((ex_trace_f, cy_v[i]), lengths[i]/2, fill=False, linestyle='--', edgecolor='darkslategrey', linewidth=1.2, alpha=0.7))
 
                 for name, ax in [("FRONT SIDE VIEW", ax_f), ("BACK SIDE VIEW (FLIPPED)", ax_b)]:
                     ax.set_title(name, fontweight='bold', fontsize=11)
@@ -374,8 +380,117 @@ def run_optimization():
                 plt.tight_layout()
                 save_path = os.path.join(OUTPUT_DIR, f"layout_alternative_{layout_idx}.png")
                 plt.savefig(save_path, dpi=200, bbox_inches='tight')
-                print(f"[P] Exported engineering layout layout_{layout_idx}.png")
                 plt.close(fig)
+
+                # ------------------- IMAGE 2: SEPARATE CLEARANCE & PROXIMITY ENGINE -------------------
+                fig_c, ax_c = plt.subplots(figsize=(14, 10))
+                fig_c.suptitle(f"Layout Alternative {layout_idx} — Inter-Insert Proximity Verification (< 40mm)\n(Combined Layer Projection Space)", 
+                               fontsize=13, fontweight='bold')
+                
+                ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2), panel_width, panel_height, color='lightgray', alpha=0.2))
+                ax_c.add_patch(plt.Rectangle((-panel_width/2, panel_height/2 - border_spacing), panel_width, border_spacing, color='red', alpha=0.08))
+                ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2), panel_width, border_spacing, color='red', alpha=0.08))
+                ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.08))
+                ax_c.add_patch(plt.Rectangle((panel_width/2 - border_spacing, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.08))
+
+                # Render components using a translucent scheme to reveal overlapping features clearly
+                for i in range(num_elements):
+                    i_start = offset_indices[i]
+                    ins_rad = insert_diams[i] / 2.0
+                    
+                    # Unified coordinate baseline (mapped inside front/true reference layout grid)
+                    ex = cx_v[i] if not is_back_side[i] else -cx_v[i]
+                    ey = cy_v[i]
+                    
+                    if not is_back_side[i]:
+                        if element_shapes[i] == 'rectangle':
+                            ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.25, edgecolor='navy', linewidth=1.2))
+                        else:
+                            ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.25, edgecolor='navy', linewidth=1.2))
+                        
+                        for ii in range(offset_counts[i]):
+                            dx, dy = flat_offsets[i_start + ii]
+                            ax_c.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson', alpha=0.7, zorder=4))
+                    else:
+                        if element_shapes[i] == 'rectangle':
+                            ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='darkgreen', alpha=0.25, edgecolor='darkslategrey', linewidth=1.2))
+                        else:
+                            ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='darkgreen', alpha=0.25, edgecolor='darkslategrey', linewidth=1.2))
+                        
+                        for ii in range(offset_counts[i]):
+                            dx, dy = flat_offsets[i_start + ii]
+                            # Flipped alignment projection for local mapping
+                            ax_c.add_patch(plt.Circle((ex - dx, ey + dy), ins_rad, color='orange', alpha=0.7, zorder=4))
+                    
+                    ax_c.text(ex, ey, element_names[i], color='black', alpha=0.6, ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
+
+                # Scan vectors and compile the legend text listing distances
+                close_pairs_labels = []
+                label_counter = 0
+                alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+                for i in range(num_elements):
+                    i_start = offset_indices[i]
+                    for j in range(i + 1, num_elements):
+                        j_start = offset_indices[j]
+                        
+                        for ii in range(offset_counts[i]):
+                            idx_i = i_start + ii
+                            xi_abs = abs_x_positions[i] + (-flat_offsets[idx_i, 0] if is_back_side[i] else flat_offsets[idx_i, 0])
+                            yi_abs = cy_v[i] + flat_offsets[idx_i, 1]
+                            
+                            for jj in range(offset_counts[j]):
+                                idx_j = j_start + jj
+                                xj_abs = abs_x_positions[j] + (-flat_offsets[idx_j, 0] if is_back_side[j] else flat_offsets[idx_j, 0])
+                                yj_abs = cy_v[j] + flat_offsets[idx_j, 1]
+                                
+                                dist = np.sqrt((xi_abs - xj_abs)**2 + (yi_abs - yj_abs)**2)
+                                
+                                if dist < 40.0:
+                                    # Translate physical tracking frames directly onto the common layout space
+                                    xf1 = cx_v[i] + flat_offsets[idx_i, 0] if not is_back_side[i] else -(cx_v[i] + flat_offsets[idx_i, 0])
+                                    yf1 = cy_v[i] + flat_offsets[idx_i, 1]
+                                    xf2 = cx_v[j] + flat_offsets[idx_j, 0] if not is_back_side[j] else -(cx_v[j] + flat_offsets[idx_j, 0])
+                                    yf2 = cy_v[j] + flat_offsets[idx_j, 1]
+                                    
+                                    current_letter = alphabet[label_counter % len(alphabet)]
+                                    label_counter += 1
+                                    
+                                    # Draw geometric link lines across pins
+                                    ax_c.plot([xf1, xf2], [yf1, yf2], color='purple', linestyle='--', linewidth=1.5, alpha=0.85, zorder=10)
+                                    
+                                    # Tag lines with clean letters
+                                    ax_c.text((xf1 + xf2)/2, (yf1 + yf2)/2, current_letter, color='white', 
+                                              fontsize=8, fontweight='bold', ha='center', va='center',
+                                              bbox=dict(boxstyle="circle,pad=0.2", fc="darkmagenta", ec="none", alpha=0.9), zorder=11)
+                                    
+                                    close_pairs_labels.append(f"{current_letter} — {dist:.2f} mm ({element_names[i]} ↔ {element_names[j]})")
+
+                # Compile distances inside a neat table window legend block if vectors are found
+                if close_pairs_labels:
+                    legend_box_text = "\n".join(close_pairs_labels)
+                    ax_c.text(1.02, 0.95, f"Pin Distances Summary:\n\n{legend_box_text}", 
+                              transform=ax_c.transAxes, fontsize=9, verticalalignment='top',
+                              bbox=dict(boxstyle="round,pad=0.5", fc="#F8F9F9", ec="#BDC3C7", lw=1.2))
+                else:
+                    ax_c.text(1.02, 0.95, "Pin Distances Summary:\n\nNo insert violations\nor pins found under 40mm.", 
+                              transform=ax_c.transAxes, fontsize=9, verticalalignment='top',
+                              bbox=dict(boxstyle="round,pad=0.5", fc="#F8F9F9", ec="#BDC3C7", lw=1.2))
+
+                # Color keys for visual layers
+                front_patch = mpatches.Patch(color='royalblue', alpha=0.4, label='Front Layer Components')
+                back_patch = mpatches.Patch(color='darkgreen', alpha=0.4, label='Back Layer Components')
+                ax_c.legend(handles=[front_patch, back_patch], loc='lower left')
+
+                ax_c.set_xlim(-panel_width/2 - 10, panel_width/2 + 10)
+                ax_c.set_ylim(-panel_height/2 - 10, panel_height/2 + 10)
+                ax_c.set_aspect('equal')
+                ax_c.grid(True, linestyle=':', alpha=0.4)
+                
+                save_path_c = os.path.join(OUTPUT_DIR, f"layout_alternative_{layout_idx}_clearance.png")
+                plt.savefig(save_path_c, dpi=200, bbox_inches='tight')
+                print(f"[P] Exported separate clearance map layout_{layout_idx}_clearance.png")
+                plt.close(fig_c)
 
 if __name__ == '__main__':
     run_optimization()

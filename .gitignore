@@ -1,0 +1,12 @@
+howtoopen.txt
+
+
+# Ignore Python compiled files
+__pycache__/
+*.pyc
+
+# Ignore local virtual environments
+layout_env/
+
+# Ignore OS-specific system files (like Mac's .DS_Store)
+.DS_Store

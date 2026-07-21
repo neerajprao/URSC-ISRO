@@ -4,8 +4,8 @@
     "Length (mm)": 960.0,
     "Breadth (mm)": 582.4,
     "Weight (kg)": 2.0,
-    "Border (mm)": 20.0,
-    "Clearance (mm)": 20.0
+    "Border (mm)": 1.0,
+    "Clearance (mm)": 5.0
   },
   "COMPONENTS": {
     "FRONT": [
@@ -97,6 +97,15 @@
         "Insert (mm)": 4.0,
         "Shape": "rectangle",
         "Insert qty": 4,
+        "Object qty": 1
+      },
+      {
+        "Object name": "DM",
+        "Diameter (mm)": 580.0,
+        "Weight (kg)": 22.0,
+        "Insert (mm)": 6.0,
+        "Shape": "circle",
+        "Insert qty": 9,
         "Object qty": 1
       }
     ]

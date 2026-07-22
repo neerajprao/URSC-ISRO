@@ -52,13 +52,14 @@ def compute_fitness_core(cx, cy, masses, hl, hw, clearance, req_d_matrix, num_co
         if cg_penalty > 1e11:
             return cg_penalty
 
-    # 2. SCREENING STEP: LOCAL 2D Clearance Overlaps
+    # 2. SCREENING STEP: STRICT ZERO-OVERLAP CLEARANCE & WIRING KEEPOUT CHECK
+    # clearance_dirs: [Top(1), Right(2), Bottom(3), Left(4)]
     overlap_penalty = 0.0
     for i in range(num_components):
-        i_x_min = abs_x[i] - hl[i] - clearance_dirs[i, 3]
-        i_x_max = abs_x[i] + hl[i] + clearance_dirs[i, 1]
-        i_y_min = cy[i] - hw[i] - clearance_dirs[i, 2]
-        i_y_max = cy[i] + hw[i] + clearance_dirs[i, 0]
+        i_x_min = abs_x[i] - hl[i] - clearance_dirs[i, 3]  # Left boundary
+        i_x_max = abs_x[i] + hl[i] + clearance_dirs[i, 1]  # Right boundary
+        i_y_min = cy[i] - hw[i] - clearance_dirs[i, 2]      # Bottom boundary
+        i_y_max = cy[i] + hw[i] + clearance_dirs[i, 0]      # Top boundary
 
         for j in range(i + 1, num_components):
             if is_back_side[i] == is_back_side[j]:
@@ -67,11 +68,12 @@ def compute_fitness_core(cx, cy, masses, hl, hw, clearance, req_d_matrix, num_co
                 j_y_min = cy[j] - hw[j] - clearance_dirs[j, 2]
                 j_y_max = cy[j] + hw[j] + clearance_dirs[j, 0]
 
+                # Bounding-box intersection check across full clearance envelopes
                 overlap_x = max(0.0, min(i_x_max, j_x_max) - max(i_x_min, j_x_min))
                 overlap_y = max(0.0, min(i_y_max, j_y_max) - max(i_y_min, j_y_min))
 
                 if overlap_x > 0.0 and overlap_y > 0.0:
-                    overlap_penalty += overlap_x * overlap_y * 1e6
+                    overlap_penalty += (overlap_x * overlap_y) * 1e7
                 
     if overlap_penalty > 1e10:
         return cg_penalty + overlap_penalty
@@ -172,6 +174,7 @@ def run_optimization():
         cf_faces = component.get('CF', [])
         cf_len = float(component.get('CFLen (mm)', clearance))
         
+        # Directions: [Top (1), Right (2), Bottom (3), Left (4)]
         c_dirs = [clearance, clearance, clearance, clearance]
         for face in cf_faces:
             if face == 1:
@@ -227,6 +230,7 @@ def run_optimization():
     clearance_dirs = np.array(clearance_dirs_list, dtype=np.float64)
     n = len(element_data)
 
+    # Calculate variable bounds so that clearance regions never violate board borders
     bounds = []
     for i in range(num_elements):
         i_start = offset_indices[i]
@@ -267,7 +271,7 @@ def run_optimization():
 
     cpu_cores = os.cpu_count() or 8
     print(f"🚀 M3 Pro Acceleration Active | Available Cores: {cpu_cores}")
-    print("⚡ Executing Parallel Differential Evolution...\n")
+    print("⚡ Executing Parallel Differential Evolution with Strict Keepouts...\n")
     start_time = time.time()
 
     while len(distinct_layouts) < 5 and attempt < max_attempts:
@@ -538,4 +542,3 @@ def run_optimization():
 
 if __name__ == '__main__':
     run_optimization()
-

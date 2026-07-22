@@ -50,6 +50,15 @@
         "Object qty": 1,
         "CF": [1,3],
         "CFLen (mm)": 10.0
+      },
+      {
+      	"Object name": "DM",
+        "Diameter (mm)": 580.0,
+        "Weight (kg)": 22.0,
+        "Insert (mm)": 6.0,
+        "Shape": "circle",
+        "Insert qty": 9,
+        "Object qty": 1
       }
     ],
     "BACK": [

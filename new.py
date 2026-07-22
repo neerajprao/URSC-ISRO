@@ -539,13 +539,3 @@ def run_optimization():
 if __name__ == '__main__':
     run_optimization()
 
-# ,
-#       {
-#       	"Object name": "DM",
-#         "Diameter (mm)": 580.0,
-#         "Weight (kg)": 22.0,
-#         "Insert (mm)": 6.0,
-#         "Shape": "circle",
-#         "Insert qty": 9,
-#         "Object qty": 1
-#       }

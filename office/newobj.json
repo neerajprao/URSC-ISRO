@@ -74,7 +74,7 @@
         "Weight (kg)": 0.1,
         "Insert (mm)": 4.0,
         "Shape": "rectangle",
-        "Insert qty": 4,
+        "Insert qty": 2,
         "Object qty": 4,
         "CF": [1],
         "CFLen (mm)": 65.0

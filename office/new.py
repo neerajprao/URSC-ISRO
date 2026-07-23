@@ -13,7 +13,7 @@ from numba import njit, prange
 warnings.filterwarnings("ignore")
 
 # ================= STRUCTURAL CONFIGURATION ==================
-CG_TOLERANCE = 20.0  # mm: Target combined center of gravity
+CG_TOLERANCE = 5.0  # mm: Target combined center of gravity
 OUTPUT_DIR = "optimized_layouts"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

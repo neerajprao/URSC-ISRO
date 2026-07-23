@@ -13,7 +13,7 @@ from numba import njit, prange
 warnings.filterwarnings("ignore")
 
 # ================= STRUCTURAL CONFIGURATION ==================
-CG_TOLERANCE = 5.0  # mm: Target combined center of gravity
+CG_TOLERANCE = 1.0  # mm: Target combined center of gravity
 OUTPUT_DIR = "optimized_layouts"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -221,7 +221,13 @@ def run_optimization():
             insert_qty = int(component.get('Insert qty', 4))
             half_l, half_w = length / 2.0, width / 2.0
             
-            if insert_qty == 6:
+            if insert_qty == 2:
+                # Place inserts at the midpoints of the shorter sides
+                if length >= width:
+                    offsets = [(half_l, 0.0), (-half_l, 0.0)]
+                else:
+                    offsets = [(0.0, half_w), (0.0, -half_w)]
+            elif insert_qty == 6:
                 offsets = [(half_l, half_w), (half_l, -half_w), (-half_l, half_w), (-half_l, -half_w)]
                 if length >= width:
                     offsets.extend([(0.0, half_w), (0.0, -half_w)])

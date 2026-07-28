@@ -1,562 +1,561 @@
-# Import the 'os' module to interact with the computer's operating system (like creating folders)
+# Import the 'os' module to interact with the computer's operating system (e.g., file paths, directory creation)
 import os
-# Import the 'time' module to measure how long the program takes to run
+# Import the 'time' module to measure program execution runtime
 import time
-# Import the 'json' module to read and process configuration files written in JSON format
+# Import the 'json' module to load and parse structural configuration files written in JSON format
 import json
-# Import the 'warnings' module to silence non-critical program warnings from cluttering the screen
+# Import the 'warnings' module to manage and suppress non-critical system warnings
 import warnings
-# Import 'numpy' (aliased as 'np'), a fundamental library for fast numerical and mathematical calculations
+# Import 'numpy' (aliased as 'np'), a fundamental library for fast matrix calculations and numerical operations
 import numpy as np
-# Import the core 'matplotlib' plotting library used to draw graphs and visual layouts
+# Import the main 'matplotlib' plotting library used to construct figures and graphics
 import matplotlib
-# Tell matplotlib to run in 'headless' mode so it creates images without popping up windows on screen
+# Force matplotlib to use the 'Agg' non-interactive backend to render graphics without spawning GUI pop-up windows
 matplotlib.use('Agg')  # Headless backend: disables GUI rendering completely
-# Import 'pyplot' from matplotlib to create custom diagrams and plots
+# Import 'pyplot' from matplotlib to construct and format custom multi-panel graphics and plots
 import matplotlib.pyplot as plt
-# Import shape drawing helpers (patches) from matplotlib to draw geometric shapes like rectangles
+# Import drawing patches from matplotlib to render geometric shapes such as rectangles and circles
 import matplotlib.patches as mpatches
-# Import the 'differential_evolution' optimizer, an algorithm used to find the best layout design
+# Import the 'differential_evolution' global optimizer from SciPy to search for ideal component placements
 from scipy.optimize import differential_evolution
-# Import Numba tools ('njit' for high-speed compilation, 'prange' for running tasks in parallel across CPU cores)
+# Import Numba tools ('njit' for fast compilation, 'prange' for multithreaded CPU loops)
 from numba import njit, prange
 
-# Mute all non-critical warning messages so the output screen remains clean
+# Mute all non-critical program warning messages to ensure a clean console output
 warnings.filterwarnings("ignore")
 
 # ================= STRUCTURAL CONFIGURATION ==================
-# Set the maximum acceptable distance (in millimeters) that the physical center of weight can drift from the exact center
+# Define the maximum allowed physical offset (in mm) between the combined assembly Center of Gravity and board center (0,0)
 CG_TOLERANCE = 1.0  # mm: Target combined center of gravity
-# Define the folder name where all generated layout pictures will be saved
+# Set the target folder path where rendered diagram images will be generated and stored
 OUTPUT_DIR = "optimized_layouts"
-# Create the output folder on the computer if it does not already exist
+# Automatically create the output directory on the filesystem if it does not already exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ================= NUMBA PARALLEL ACCELERATED CORE MATHEMATICS =================
-# Use Numba's JIT compiler to translate this math function directly into ultra-fast machine code
+# Compile the mathematical scoring core into ultra-fast machine code using Numba's JIT compiler
 @njit(fastmath=True, cache=True)
-# Define the mathematical function that scores how good or bad a specific layout arrangement is
+# Define the core fitness function that calculates and returns penalty scores for candidate layouts
 def compute_fitness_core(cx, cy, masses, hl, hw, clearance, req_d_matrix, num_components, 
                          flat_offsets, offset_counts, offset_indices, is_back_side,
                          clearance_dirs, panel_width, panel_height, border_spacing):
-    # Initialize the total mass variable to zero before summing up all component weights
+    # Initialize the total assembly weight accumulator variable to zero
     total_mass = 0.0
-    # Initialize the overall center-of-gravity X coordinate to zero
+    # Initialize the horizontal center-of-gravity moment accumulator variable to zero
     cg_x = 0.0
-    # Initialize the overall center-of-gravity Y coordinate to zero
+    # Initialize the vertical center-of-gravity moment accumulator variable to zero
     cg_y = 0.0
     
-    # Create an empty numerical array to store the true horizontal positions of all components
+    # Allocate a double-precision floating-point array to hold true physical horizontal coordinates of components
     abs_x = np.zeros(num_components)
-    # Loop through every component on the board one by one
+    # Loop over every component in the assembly to evaluate mass properties and spatial position
     for i in range(num_components):
-        # Retrieve the individual weight of the current component
+        # Retrieve the individual mass value of the current component
         m = masses[i]
-        # Add the current component's weight to the total weight accumulator
+        # Add the component's mass to the running assembly mass sum
         total_mass += m
-        # Check if the component is mounted on the back side of the board
+        # Determine whether the component is mounted on the back side layer
         if is_back_side[i]:
-            # Flip the horizontal coordinate for back-side components because the back side is a mirror view
+            # Negate the X-coordinate for back-side components to reflect physical horizontal mirroring
             abs_x[i] = -cx[i]
-        # Otherwise, the component is on the front side
+        # Otherwise, the component is mounted on the front side layer
         else:
-            # Keep the original horizontal coordinate for front-side components
+            # Maintain the standard X-coordinate for front-side components
             abs_x[i] = cx[i]
         
-        # Multiply position by mass to calculate the horizontal weight balance contribution
+        # Calculate horizontal moment contribution (mass multiplied by absolute horizontal position)
         cg_x += abs_x[i] * m
-        # Multiply position by mass to calculate the vertical weight balance contribution
+        # Calculate vertical moment contribution (mass multiplied by vertical position)
         cg_y += cy[i] * m
         
-    # Safety check: if all components weigh zero in total, stop and return a massive error penalty score
+    # Guard against division by zero in edge cases where all component masses evaluate to zero
     if total_mass == 0.0:
-        # Return an extremely high penalty score signaling an impossible layout
+        # Return an arbitrarily huge penalty value to reject physically invalid component models
         return 1e15
         
-    # Calculate the true final horizontal center of gravity by dividing total weighted balance by total mass
+    # Calculate the overall assembly X-axis Center of Gravity by dividing total horizontal moment by total mass
     cg_x /= total_mass
-    # Calculate the true final vertical center of gravity by dividing total weighted balance by total mass
+    # Calculate the overall assembly Y-axis Center of Gravity by dividing total vertical moment by total mass
     cg_y /= total_mass
     
     # EQUAL TOP PRIORITY PENALTY SCALE
-    # Define a huge penalty multiplier (100 million) so any mistake heavily punishes bad layout designs
+    # Define a high-order penalty multiplier (100 million) to penalize rule violations heavily
     PENALTY_WEIGHT = 1e8
 
-    # Calculate the usable left boundary limit of the board by subtracting the outer border zone
+    # Calculate the active left boundary limit of the board by applying outer border keepout margin
     active_x_min = -panel_width / 2.0 + border_spacing
-    # Calculate the usable right boundary limit of the board by subtracting the outer border zone
+    # Calculate the active right boundary limit of the board by applying outer border keepout margin
     active_x_max =  panel_width / 2.0 - border_spacing
-    # Calculate the usable bottom boundary limit of the board by subtracting the outer border zone
+    # Calculate the active bottom boundary limit of the board by applying outer border keepout margin
     active_y_min = -panel_height / 2.0 + border_spacing
-    # Calculate the usable top boundary limit of the board by subtracting the outer border zone
+    # Calculate the active top boundary limit of the board by applying outer border keepout margin
     active_y_max =  panel_height / 2.0 - border_spacing
 
     # 1. CENTER OF GRAVITY PENALTY
-    # Calculate the straight-line distance from the exact center (0,0) to the current center of gravity
+    # Compute the Euclidean offset distance of the Center of Gravity from the physical origin (0, 0)
     cg_offset = np.sqrt(cg_x**2 + cg_y**2)
-    # Start the center of gravity penalty score at zero
+    # Initialize Center of Gravity penalty value to zero
     cg_penalty = 0.0
-    # Check if the center of gravity offset exceeds our allowed tolerance (1.0 mm)
+    # Check whether the total Center of Gravity drift exceeds the maximum allowable tolerance limit (1.0 mm)
     if cg_offset > CG_TOLERANCE:
-        # Calculate a heavy penalty proportional to how far the center of gravity drifted past the limit
+        # Calculate a quadratic penalty scaled to the magnitude of the Center of Gravity displacement violation
         cg_penalty = ((cg_offset - CG_TOLERANCE) ** 2) * PENALTY_WEIGHT
 
     # 2. STRICT CLEARANCE OVERLAP & BORDER KEEPOUT PENALTY
-    # Start the physical overlap penalty score at zero
+    # Initialize inter-component physical collision penalty accumulator to zero
     overlap_penalty = 0.0
-    # Start the border encroachment penalty score at zero
+    # Initialize outer border encroachment penalty accumulator to zero
     border_penalty = 0.0
 
-    # Loop through each component to verify physical boundary and collision safety rules
+    # Iterate over all components to verify geometric keepout and clearance boundaries
     for i in range(num_components):
-        # Read the top required safety clearance distance for component 'i'
+        # Extract top clearance margin requirement for component 'i'
         c_top = clearance_dirs[i, 0]
-        # Read the right safety clearance distance (swapping left/right if on the back side)
+        # Extract right clearance margin requirement for component 'i' (swapping sides if back-mounted)
         c_right = clearance_dirs[i, 3] if is_back_side[i] else clearance_dirs[i, 1]
-        # Read the bottom required safety clearance distance for component 'i'
+        # Extract bottom clearance margin requirement for component 'i'
         c_bot = clearance_dirs[i, 2]
-        # Read the left safety clearance distance (swapping left/right if on the back side)
+        # Extract left clearance margin requirement for component 'i' (swapping sides if back-mounted)
         c_left = clearance_dirs[i, 1] if is_back_side[i] else clearance_dirs[i, 3]
 
-        # Calculate the leftmost boundary edge including safety clearance area
+        # Calculate minimum horizontal extent (left boundary) including clearance zone
         i_x_min = abs_x[i] - hl[i] - c_left
-        # Calculate the rightmost boundary edge including safety clearance area
+        # Calculate maximum horizontal extent (right boundary) including clearance zone
         i_x_max = abs_x[i] + hl[i] + c_right
-        # Calculate the bottommost boundary edge including safety clearance area
+        # Calculate minimum vertical extent (bottom boundary) including clearance zone
         i_y_min = cy[i] - hw[i] - c_bot
-        # Calculate the topmost boundary edge including safety clearance area
+        # Calculate maximum vertical extent (top boundary) including clearance zone
         i_y_max = cy[i] + hw[i] + c_top
 
         # --- RULE 1: STRICT ZERO OVERLAP WITH BOARD BORDER ---
-        # Measure how far the component spills past the allowed left board boundary
+        # Quantify left boundary border violation distance
         viol_left   = max(0.0, active_x_min - i_x_min)
-        # Measure how far the component spills past the allowed right board boundary
+        # Quantify right boundary border violation distance
         viol_right  = max(0.0, i_x_max - active_x_max)
-        # Measure how far the component spills past the allowed bottom board boundary
+        # Quantify bottom boundary border violation distance
         viol_bottom = max(0.0, active_y_min - i_y_min)
-        # Measure how far the component spills past the allowed top board boundary
+        # Quantify top boundary border violation distance
         viol_top    = max(0.0, i_y_max - active_y_max)
 
-        # Sum up all border boundary violations for this component
+        # Sum total border encroachment distances across all four edges
         total_border_viol = viol_left + viol_right + viol_bottom + viol_top
-        # If any part of the component spills outside the allowed board area
+        # If any portion of component 'i' breaches the forbidden border zone
         if total_border_viol > 0.0:
-            # Apply a massive squared penalty score for violating the board boundaries
+            # Apply quadratic penalty proportional to the border encroachment magnitude
             border_penalty += (total_border_viol ** 2) * PENALTY_WEIGHT
 
         # --- RULE 2 & 3: STRICT ZERO OVERLAP WITH OTHER SAME-SIDE COMPONENTS/CLEARANCES ---
-        # Loop through all remaining components to test if component 'i' collides with component 'j'
+        # Compare component 'i' against all subsequent components 'j' to evaluate potential overlaps
         for j in range(i + 1, num_components):
-            # Collisions only matter if both components are mounted on the same side of the board
+            # Evaluate collisions only if both components reside on the same board layer (FRONT vs BACK)
             if is_back_side[i] == is_back_side[j]:
-                # Read component j's top safety clearance
+                # Extract top clearance margin requirement for component 'j'
                 cj_top = clearance_dirs[j, 0]
-                # Read component j's right safety clearance (adjusting for back side)
+                # Extract right clearance margin requirement for component 'j' (swapping sides if back-mounted)
                 cj_right = clearance_dirs[j, 3] if is_back_side[j] else clearance_dirs[j, 1]
-                # Read component j's bottom safety clearance
+                # Extract bottom clearance margin requirement for component 'j'
                 cj_bot = clearance_dirs[j, 2]
-                # Read component j's left safety clearance (adjusting for back side)
+                # Extract left clearance margin requirement for component 'j' (swapping sides if back-mounted)
                 cj_left = clearance_dirs[j, 1] if is_back_side[j] else clearance_dirs[j, 3]
 
-                # Calculate component j's leftmost edge including clearance
+                # Calculate component 'j' left boundary edge including clearance
                 j_x_min = abs_x[j] - hl[j] - cj_left
-                # Calculate component j's rightmost edge including clearance
+                # Calculate component 'j' right boundary edge including clearance
                 j_x_max = abs_x[j] + hl[j] + cj_right
-                # Calculate component j's bottom edge including clearance
+                # Calculate component 'j' bottom boundary edge including clearance
                 j_y_min = cy[j] - hw[j] - cj_bot
-                # Calculate component j's top edge including clearance
+                # Calculate component 'j' top boundary edge including clearance
                 j_y_max = cy[j] + hw[j] + cj_top
 
-                # Calculate the horizontal length of the overlapping rectangular region (if any)
+                # Calculate the horizontal overlap length between clearance bounding boxes
                 overlap_x = max(0.0, min(i_x_max, j_x_max) - max(i_x_min, j_x_min))
-                # Calculate the vertical height of the overlapping rectangular region (if any)
+                # Calculate the vertical overlap height between clearance bounding boxes
                 overlap_y = max(0.0, min(i_y_max, j_y_max) - max(i_y_min, j_y_min))
 
-                # If there is both horizontal and vertical overlap, the two components are physically crashing
+                # Check if non-zero overlap exists along both horizontal and vertical axes simultaneously
                 if overlap_x > 0.0 and overlap_y > 0.0:
-                    # Calculate the surface area of the physical collision region
+                    # Calculate total 2D bounding box intersection area
                     overlap_area = overlap_x * overlap_y
-                    # Apply a massive penalty score proportional to the area of collision
+                    # Apply quadratic penalty proportional to the square of the intersection area
                     overlap_penalty += (overlap_area ** 2) * PENALTY_WEIGHT
 
     # 3. PIN INSERT SAFE DISTANCE PENALTY
-    # Initialize the pin insertion safety distance penalty score to zero
+    # Initialize pin clearance violation penalty accumulator to zero
     insert_penalty = 0.0
-    # Loop over all components to inspect mounting pin positions
+    # Loop over all components to verify physical mounting pin separation distances
     for i in range(num_components):
-        # Look up where component i's pin list starts in memory
+        # Obtain start memory offset for component 'i' mounting pin array
         i_start = offset_indices[i]
-        # Look up how many mounting pins component i has
+        # Retrieve total mounting pin count for component 'i'
         i_count = offset_counts[i]
         
-        # Compare component i's pins against every other component j's pins
+        # Compare mounting pins of component 'i' against mounting pins of component 'j'
         for j in range(i + 1, num_components):
-            # Look up where component j's pin list starts in memory
+            # Obtain start memory offset for component 'j' mounting pin array
             j_start = offset_indices[j]
-            # Look up how many mounting pins component j has
+            # Retrieve total mounting pin count for component 'j'
             j_count = offset_counts[j]
-            # Look up the mandatory minimum separation distance required between pins of component i and j
+            # Lookup precomputed required pin separation threshold distance between component pair (i, j)
             req_dist = req_d_matrix[i, j]
             
-            # Loop over every individual pin belonging to component i
+            # Loop over all individual mounting pins associated with component 'i'
             for ii in range(i_count):
-                # Calculate memory index for pin 'ii' of component i
+                # Compute flat array index for pin 'ii' of component 'i'
                 idx_i = i_start + ii
-                # Calculate the absolute horizontal coordinate of pin 'ii' in 2D space
+                # Compute absolute horizontal coordinate of pin 'ii' considering board side flip
                 xi_abs = abs_x[i] + (-flat_offsets[idx_i, 0] if is_back_side[i] else flat_offsets[idx_i, 0])
-                # Calculate the absolute vertical coordinate of pin 'ii' in 2D space
+                # Compute absolute vertical coordinate of pin 'ii'
                 yi_abs = cy[i] + flat_offsets[idx_i, 1]
                 
-                # Loop over every individual pin belonging to component j
+                # Loop over all individual mounting pins associated with component 'j'
                 for jj in range(j_count):
-                    # Calculate memory index for pin 'jj' of component j
+                    # Compute flat array index for pin 'jj' of component 'j'
                     idx_j = j_start + jj
-                    # Calculate the absolute horizontal coordinate of pin 'jj' in 2D space
+                    # Compute absolute horizontal coordinate of pin 'jj' considering board side flip
                     xj_abs = abs_x[j] + (-flat_offsets[idx_j, 0] if is_back_side[j] else flat_offsets[idx_j, 0])
-                    # Calculate the absolute vertical coordinate of pin 'jj' in 2D space
+                    # Compute absolute vertical coordinate of pin 'jj'
                     yj_abs = cy[j] + flat_offsets[idx_j, 1]
                     
-                    # Calculate the straight-line distance between pin 'ii' and pin 'jj' using the Pythagorean formula
+                    # Compute straight-line 2D Euclidean distance between pin 'ii' and pin 'jj'
                     dist = np.sqrt((xi_abs - xj_abs)**2 + (yi_abs - yj_abs)**2)
-                    # Check if the actual distance is smaller than the required safe separation distance
+                    # Check if actual pin separation distance is less than required separation distance
                     if req_dist > dist:
-                        # Apply a penalty score for placing pins too close to one another
+                        # Apply quadratic penalty proportional to the magnitude of pin distance violation
                         insert_penalty += ((req_dist - dist) ** 2) * PENALTY_WEIGHT
                         
-    # Return the total combined penalty score (a perfect layout yields a score of zero)
+    # Return total aggregated penalty score (a value of 0.0 indicates full physical compliance)
     return cg_penalty + overlap_penalty + border_penalty + insert_penalty
 
 
-# Define a bridge function so the SciPy optimizer can talk to our fast Numba math function
+# Interface function linking SciPy optimization routines to Numba accelerated mathematical core
 def evaluate(individual, masses, lengths, widths, clearance, req_d_matrix, flat_offsets, offset_counts, offset_indices, is_back_side, clearance_dirs, panel_width, panel_height, border_spacing):
-    # Extract all horizontal (X) component coordinates from the optimizer's guess vector
+    # Slice out component center X-coordinates from odd positions in optimizer guess vector
     cx = individual[::2]
-    # Extract all vertical (Y) component coordinates from the optimizer's guess vector
+    # Slice out component center Y-coordinates from even positions in optimizer guess vector
     cy = individual[1::2]
-    # Count the total number of components being placed
+    # Determine the total number of components contained in parameter list
     num_components = len(masses)
-    # Convert full component lengths into half-lengths (distance from center to edge)
+    # Calculate half-lengths (center-to-edge radius along horizontal axis)
     hl = lengths / 2.0
-    # Convert full component widths into half-widths (distance from center to edge)
+    # Calculate half-widths (center-to-edge radius along vertical axis)
     hw = widths / 2.0
     
-    # Run the Numba scoring calculation and return the total penalty score
+    # Execute Numba accelerated core calculation and return composite fitness score
     return compute_fitness_core(cx, cy, masses, hl, hw, clearance, req_d_matrix, num_components, flat_offsets, offset_counts, offset_indices, is_back_side, clearance_dirs, panel_width, panel_height, border_spacing)
 
 
-# Define the main function that loads data, runs the optimization, and creates report images
+# Main execution routine that loads specifications, executes optimization, and generates visual reports
 def run_optimization():
-    # Set the target filename containing board and component specifications
+    # Define primary target JSON configuration path containing board and component data
     filepath = 'newobj.json'
-    # Check if the JSON file exists in the current folder path
+    # Check if target JSON file exists in current execution context directory
     if not os.path.exists(filepath):
-        # Look in the full current working folder path as a fallback
+        # Re-construct path relative to system working directory as fallback
         filepath = os.path.join(os.getcwd(), 'newobj.json')
 
-    # If the specification file cannot be found anywhere, stop execution and print an error
+    # Terminate execution if configuration file cannot be found in system path
     if not os.path.exists(filepath):
-        # Raise an explicit file error to inform the user
+        # Raise explicit FileNotFoundError exception alerting user to missing input file
         raise FileNotFoundError("❌ Critical Error: Unable to locate 'newobj.json' in working directory.")
 
-    # Print a success message confirming the configuration file was located
+    # Log configuration confirmation to system console
     print(f"\n[✓] Config loaded successfully: '{filepath}'")
 
-    # Open the JSON specification file for reading
+    # Open target configuration file in read-only mode
     with open(filepath, 'r') as f:
-        # Load the structured text content into a Python dictionary object
+        # Deserialize JSON data stream into structured Python dictionary
         data = json.load(f)
 
-    # Read the overall board length (in millimeters) from the configuration dictionary
+    # Extract board total horizontal length in millimeters
     panel_width = float(data['BOARD']['Length (mm)'])
-    # Read the overall board height/breadth (in millimeters) from the configuration dictionary
+    # Extract board total vertical height in millimeters
     panel_height = float(data['BOARD']['Breadth (mm)'])
-    # Read the outer border keepout width (in millimeters) from the configuration dictionary
+    # Extract board outer border keepout width in millimeters
     border_spacing = float(data['BOARD']['Border (mm)'])
-    # Read the default component-to-component clearance gap from the configuration dictionary
+    # Extract baseline inter-component keepout clearance distance in millimeters
     clearance = float(data['BOARD']['Clearance (mm)'])
 
-    # Initialize an empty list to store component dimensions and weights
+    # Initialize empty list to accumulate component mass and geometric parameters
     element_data = []
-    # Initialize an empty list to store human-readable component names
+    # Initialize empty list to accumulate component string names
     element_names = []
-    # Initialize an empty list to store component geometric shapes (e.g., rectangle, circle)
+    # Initialize empty list to accumulate component geometry types (rectangle/circle)
     element_shapes = []
-    # Initialize an empty list to track whether components belong to front or back sides
+    # Initialize empty list to accumulate component layer placement flags
     is_back_side_list = []
-    # Initialize an empty list to hold relative pin offset coordinates for all components
+    # Initialize empty list to accumulate component pin offset vector sequences
     flat_offsets_list = []
-    # Initialize an empty list to hold directional clearance settings for each component
+    # Initialize empty list to accumulate component directional clearance configurations
     clearance_dirs_list = []
     
-    # Initialize a temporary list to hold all raw JSON component structures
+    # Initialize temporary sequence to store unrolled raw JSON component entries
     raw_components_to_process = []
-    # Loop over every component listed under the FRONT board layer in JSON
+    # Process component specifications defined under FRONT board layer
     for comp in data['COMPONENTS'].get('FRONT', []):
-        # Add the component to our list marked with 'False' (meaning front layer)
+        # Append component payload coupled with layer indicator False (FRONT)
         raw_components_to_process.append((comp, False))
-    # Loop over every component listed under the BACK board layer in JSON
+    # Process component specifications defined under BACK board layer
     for comp in data['COMPONENTS'].get('BACK', []):
-        # Add the component to our list marked with 'True' (meaning back layer)
+        # Append component payload coupled with layer indicator True (BACK)
         raw_components_to_process.append((comp, True))
 
-    # Initialize a list to hold expanded component entries (handling quantity multipliers)
+    # Initialize list to contain expanded individual instances of components
     components_to_process = []
-    # Unpack each raw component and its side marker
+    # Unpack components to handle multiplicity based on requested item quantity
     for comp, is_back in raw_components_to_process:
-        # Read the quantity count specified for this component type
+        # Extract requested quantity count, defaulting to 1 instance if unspecified
         qty = int(comp.get('Object qty', 1))
-        # If the quantity is greater than 1, expand it into individual unique objects
+        # If item quantity exceeds 1, create distinct uniquely-named instances
         if qty > 1:
-            # Create duplicate entries numbered 0, 1, 2... for each instance
+            # Loop through requested instance count
             for q in range(qty):
-                # Make a clean copy of the component properties
+                # Duplicate component property dictionary
                 cloned_comp = comp.copy()
-                # Append an index number to create a unique identifier name
+                # Append sequence index to establish unique instance identifier
                 cloned_comp['Unique Name'] = f"{comp['Object name']}{q}"
-                # Add the duplicated component object to our processing list
+                # Append cloned instance tuple to master processing queue
                 components_to_process.append((cloned_comp, is_back))
-        # Otherwise, process the single component as-is
+        # Handle single instance component specification
         else:
-            # Make a copy of the component dictionary
+            # Duplicate component property dictionary
             cloned_comp = comp.copy()
-            # Set its unique name to the given object name
+            # Retain primary name string as unique identifier
             cloned_comp['Unique Name'] = comp['Object name']
-            # Add the single component object to our processing list
+            # Append instance tuple to master processing queue
             components_to_process.append((cloned_comp, is_back))
 
-    # Count the total number of individual components to be placed on the board
+    # Quantify total count of discrete elements requiring optimization placement
     num_elements = len(components_to_process)
-    # Create an array of zeros to track how many mounting pins each component owns
+    # Initialize zero-filled integer array to track mounting pin count per component
     offset_counts = np.zeros(num_elements, dtype=np.int32)
-    # Create an array of zeros to record where each component's pin data starts in memory
+    # Initialize zero-filled integer array to track pin offset memory indices
     offset_indices = np.zeros(num_elements, dtype=np.int32)
     
-    # Track the running memory offset index position
+    # Track cumulative pin offset memory index pointer
     current_idx = 0
-    # Loop through each component and index pair in our expanded list
+    # Process individual expanded component entries
     for idx, (component, is_back) in enumerate(components_to_process):
-        # Store the unique name of the current component
+        # Retrieve unique string identifier for current component
         element_name = component['Unique Name']
-        # Read the geometric shape, defaulting to 'rectangle' if not specified
+        # Read geometric shape property, defaulting to 'rectangle'
         shape = component.get('Shape', 'rectangle')
-        # Record the shape in our master shape list
+        # Append shape identifier to master geometry tracking list
         element_shapes.append(shape)
-        # Store a binary flag (1 for back side, 0 for front side)
+        # Store integer layer flag (1 = BACK layer, 0 = FRONT layer)
         is_back_side_list.append(1 if is_back else 0)
         
-        # Read custom face clearance definitions if present in JSON
+        # Read custom face clearance declarations if present in JSON definition
         cf_faces = component.get('CF', [])
-        # Read the custom clearance length (in mm), defaulting to global clearance if absent
+        # Read custom face clearance distance, falling back to global clearance if absent
         cf_len = float(component.get('CFLen (mm)', clearance))
         
-        # Initialize default clearances [Top, Right, Bottom, Left] to the global default clearance value
+        # Initialize default directional clearances [Top, Right, Bottom, Left]
         c_dirs = [clearance, clearance, clearance, clearance]
-        # Override clearance values for specific custom-labeled faces
+        # Assign custom face clearance distances based on target face keys
         for face in cf_faces:
-            # If face 1 is specified, update top clearance
+            # Override Top clearance if face key 1 is present
             if face == 1:
                 c_dirs[0] = cf_len
-            # If face 2 is specified, update right clearance
+            # Override Right clearance if face key 2 is present
             elif face == 2:
                 c_dirs[1] = cf_len
-            # If face 3 is specified, update bottom clearance
+            # Override Bottom clearance if face key 3 is present
             elif face == 3:
                 c_dirs[2] = cf_len
-            # If face 4 is specified, update left clearance
+            # Override Left clearance if face key 4 is present
             elif face == 4:
                 c_dirs[3] = cf_len
                 
-        # Append this component's directional clearance settings to the main list
+        # Append directional clearance configuration to tracking master list
         clearance_dirs_list.append(c_dirs)
 
-        # Process sizing and pin locations for rectangular components
+        # Parse geometric properties and generate pin offset layouts for rectangular components
         if shape == 'rectangle':
-            # Read component length from JSON
+            # Extract component horizontal length dimension in mm
             length = float(component['Length (mm)'])
-            # Read component width/breadth from JSON
+            # Extract component vertical width dimension in mm
             width = float(component['Breadth (mm)'])
-            # Read mounting insert pin diameter from JSON
+            # Extract mounting pin diameter in mm
             insert_diam = float(component['Insert (mm)'])
-            # Read mounting pin quantity (defaulting to 4 corner pins if missing)
+            # Extract mounting pin count, defaulting to 4 corner pins
             insert_qty = int(component.get('Insert qty', 4))
-            # Calculate half-length and half-width for relative offset calculations
+            # Calculate half-length and half-width values for relative pin displacement
             half_l, half_w = length / 2.0, width / 2.0
             
-            # Position pins for a 2-pin component configuration
+            # Construct pin offset geometry for 2-pin components
             if insert_qty == 2:
-                # Place inserts at the midpoints of the shorter sides
+                # Align pins along the major axis depending on aspect ratio
                 if length >= width:
-                    # Place pins on the left and right outer center edges
+                    # Place pins on left and right center edges
                     offsets = [(half_l, 0.0), (-half_l, 0.0)]
                 else:
-                    # Place pins on the top and bottom outer center edges
+                    # Place pins on top and bottom center edges
                     offsets = [(0.0, half_w), (0.0, -half_w)]
-            # Position pins for a 6-pin component configuration
+            # Construct pin offset geometry for 6-pin components
             elif insert_qty == 6:
-                # Place 4 pins at the four corners of the rectangle
+                # Place 4 pins on component corners
                 offsets = [(half_l, half_w), (half_l, -half_w), (-half_l, half_w), (-half_l, -half_w)]
-                # Add two additional midpoint pins along the longer sides
+                # Add 2 additional mid-edge pins along major axis
                 if length >= width:
-                    # Add top-middle and bottom-middle pins
+                    # Append top-center and bottom-center pin positions
                     offsets.extend([(0.0, half_w), (0.0, -half_w)])
                 else:
-                    # Add left-middle and right-middle pins
+                    # Append left-center and right-center pin positions
                     offsets.extend([(half_l, 0.0), (-half_l, 0.0)])
-            # Default fallback: 4-pin configuration placed at the four corners
+            # Construct pin offset geometry for default 4-pin components
             else:
-                # Place one pin at each corner relative to component center
+                # Place 4 pins directly at component bounding box corners
                 offsets = [(half_l, half_w), (half_l, -half_w), (-half_l, half_w), (-half_l, -half_w)]
-        # Process sizing and pin locations for circular/round components
+        # Parse geometric properties and generate pin offset layouts for circular components
         else:
-            # Read component diameter from JSON
+            # Extract component diameter dimension in mm
             diameter = float(component['Diameter (mm)'])
-            # Set length and width equal to the diameter for boundary calculations
+            # Set length and width equivalent to circular diameter
             length, width = diameter, diameter
-            # Read mounting insert pin diameter
+            # Extract mounting pin diameter in mm
             insert_diam = float(component['Insert (mm)'])
-            # Read pin count (defaulting to 3 pins arranged in a ring)
+            # Extract mounting pin count, defaulting to 3 symmetric pins
             insert_qty = int(component.get('Insert qty', 3))
-            # Calculate inner radius ring position for mounting pins
+            # Determine radial placement distance for mounting pins near outer boundary
             inner_radius = max(0.0, (diameter / 2.0) - 1.0)
-            # Evenly space pins in a circular pattern using sine and cosine trigonometry
+            # Compute radially symmetric pin locations using polar coordinate transformation
             offsets = [(inner_radius * np.cos(2 * np.pi * k / insert_qty), 
                         inner_radius * np.sin(2 * np.pi * k / insert_qty)) for k in range(insert_qty)]
                         
-        # Append the calculated pin offsets to the flat offsets master list
+        # Append pin offset locations to flat offset accumulator list
         flat_offsets_list.extend(offsets)
-        # Record how many pins this specific component possesses
+        # Store total pin count assigned to current component
         offset_counts[idx] = len(offsets)
-        # Record the starting memory index position for this component's pins
+        # Store initial flat array memory index pointer for current component
         offset_indices[idx] = current_idx
-        # Increment running memory index counter by the pin count
+        # Increment flat array memory index pointer by pin count
         current_idx += len(offsets)
         
-        # Save weight, length, width, and pin diameter parameters into element data table
+        # Append component weight, dimensions, and pin diameter parameters to element data matrix
         element_data.append([float(component['Weight (kg)']), length, width, insert_diam])
-        # Save name string to name list
+        # Append component string name to name master list
         element_names.append(element_name)
 
-    # Convert pin offsets list into a fast high-performance NumPy numerical array
+    # Convert flat offset list into contiguous 2D double-precision NumPy array
     flat_offsets = np.array(flat_offsets_list, dtype=np.float64)
-    # Convert element data into a standard floating-point NumPy array
+    # Convert element parameter list into 2D floating-point NumPy array
     element_data = np.array(element_data, dtype=float)
-    # Extract component masses column into a dedicated array
+    # Extract component masses into standalone 1D array
     masses = element_data[:, 0]
-    # Extract component lengths column into a dedicated array
+    # Extract component lengths into standalone 1D array
     lengths = element_data[:, 1]
-    # Extract component widths column into a dedicated array
+    # Extract component widths into standalone 1D array
     widths = element_data[:, 2]
-    # Extract insert pin diameters column into a dedicated array
+    # Extract mounting pin diameters into standalone 1D array
     insert_diams = element_data[:, 3]
-    # Convert layer flags list into a fast integer NumPy array
+    # Convert back-side placement list into 1D integer NumPy array
     is_back_side = np.array(is_back_side_list, dtype=np.int32)
-    # Convert clearance settings list into a fast double-precision NumPy array
+    # Convert directional clearances into 2D double-precision NumPy array
     clearance_dirs = np.array(clearance_dirs_list, dtype=np.float64)
-    # Count the total number of components
+    # Store total component count
     n = len(element_data)
 
     # Tight Variable Bounds Calculation (Flipped for back components)
-    # Create an empty list to store movement boundary limits (min/max allowed X and Y) for every component
+    # Initialize list to hold variable optimization coordinate boundaries (min/max X, Y)
     bounds = []
-    # Loop over every component to calculate its specific allowed movement box on the board
+    # Calculate feasible placement bounds for each individual component
     for i in range(num_elements):
-        # Retrieve pin list start memory index for component i
+        # Read pin array start memory index
         i_start = offset_indices[i]
-        # Retrieve pin count for component i
+        # Read pin array count
         i_count = offset_counts[i]
-        # Slice out pin offset values for component i
+        # Extract component relative pin offsets
         comp_offsets = flat_offsets[i_start : i_start + i_count]
         
-        # Calculate maximum horizontal distance from center to any mounting pin
+        # Determine maximum relative horizontal pin offset from origin
         max_off_x = max(abs(x) for x, _ in comp_offsets) if i_count > 0 else 0
-        # Calculate maximum vertical distance from center to any mounting pin
+        # Determine maximum relative vertical pin offset from origin
         max_off_y = max(abs(y) for _, y in comp_offsets) if i_count > 0 else 0
         
-        # Read top clearance requirement
+        # Read component Top clearance margin
         c_top = clearance_dirs[i, 0]
-        # Read right clearance requirement (swap left/right if component is on back side)
+        # Read component Right clearance margin (swapping sides if back-mounted)
         c_right = clearance_dirs[i, 3] if is_back_side[i] else clearance_dirs[i, 1]
-        # Read bottom clearance requirement
+        # Read component Bottom clearance margin
         c_bot = clearance_dirs[i, 2]
-        # Read left clearance requirement (swap left/right if component is on back side)
+        # Read component Left clearance margin (swapping sides if back-mounted)
         c_left = clearance_dirs[i, 1] if is_back_side[i] else clearance_dirs[i, 3]
         
-        # Calculate left edge buffer required (considering both body width and pin clearance)
+        # Determine total required left border margin accounting for body and pins
         req_margin_left = max(lengths[i]/2.0 + c_left, max_off_x + insert_diams[i]/2.0)
-        # Calculate right edge buffer required
+        # Determine total required right border margin accounting for body and pins
         req_margin_right = max(lengths[i]/2.0 + c_right, max_off_x + insert_diams[i]/2.0)
-        # Calculate bottom edge buffer required
+        # Determine total required bottom border margin accounting for body and pins
         req_margin_bottom = max(widths[i]/2.0 + c_bot, max_off_y + insert_diams[i]/2.0)
-        # Calculate top edge buffer required
+        # Determine total required top border margin accounting for body and pins
         req_margin_top = max(widths[i]/2.0 + c_top, max_off_y + insert_diams[i]/2.0)
         
-        # Set movement limits for front-side components
+        # Set spatial horizontal movement limits for FRONT-mounted components
         if not is_back_side[i]:
-            # Calculate minimum allowed horizontal coordinate (X-min)
+            # Calculate lower horizontal coordinate bound (X-min)
             x_min = -panel_width / 2.0 + border_spacing + req_margin_left
-            # Calculate maximum allowed horizontal coordinate (X-max)
+            # Calculate upper horizontal coordinate bound (X-max)
             x_max =  panel_width / 2.0 - border_spacing - req_margin_right
-        # Set movement limits for back-side components (swapping left and right margins)
+        # Set spatial horizontal movement limits for BACK-mounted components (swapping left/right bounds)
         else:
-            # Back components are negated in abs_x, swap left/right bound margins
+            # Calculate lower horizontal coordinate bound with reversed margins
             x_min = -panel_width / 2.0 + border_spacing + req_margin_right
-            # Calculate maximum horizontal bound for back component
+            # Calculate upper horizontal coordinate bound with reversed margins
             x_max =  panel_width / 2.0 - border_spacing - req_margin_left
 
-        # Calculate minimum allowed vertical coordinate (Y-min)
+        # Calculate lower vertical coordinate bound (Y-min)
         y_min = -panel_height / 2.0 + border_spacing + req_margin_bottom
-        # Calculate maximum allowed vertical coordinate (Y-max)
+        # Calculate upper vertical coordinate bound (Y-max)
         y_max =  panel_height / 2.0 - border_spacing - req_margin_top
         
-        # Add horizontal (X) allowed movement range to bounds list
+        # Append horizontal coordinate bounds tuple (min, max)
         bounds.append((x_min, x_max))
-        # Add vertical (Y) allowed movement range to bounds list
+        # Append vertical coordinate bounds tuple (min, max)
         bounds.append((y_min, y_max))
 
-    # Initialize a square matrix filled with default 30mm safe pin separation distance values
+    # Initialize symmetric matrix for pairwise required pin separation distances, default 30mm
     req_d_matrix = np.full((n, n), 30.0)
-    # Loop over every pair of components to apply specialized pin clearance rules
+    # Populate required pin separation matrix based on component pin diameter combinations
     for i in range(n):
         for j in range(n):
-            # If both components use small 4.0mm pins, lower required distance to 24.0mm
+            # Reduce required separation to 24mm if both components feature 4mm pins
             if insert_diams[i] == 4.0 and insert_diams[j] == 4.0:
                 req_d_matrix[i, j] = 24.0
-            # If both components use large 6.0mm pins, raise required distance to 36.0mm
+            # Increase required separation to 36mm if both components feature 6mm pins
             elif insert_diams[i] == 6.0 and insert_diams[j] == 6.0:
                 req_d_matrix[i, j] = 36.0
 
-    # Initialize a list to hold unique, successful layout solutions found by the optimizer
+    # Initialize empty list to collect distinct valid layout solution vectors
     distinct_layouts = []
-    # Set a maximum number of optimization retry attempts (150 attempts)
+    # Set maximum allowable optimization attempt iterations
     max_attempts = 150
-    # Initialize attempt counter to zero
+    # Initialize attempt iteration counter to zero
     attempt = 0
 
-    # Warmup Numba JIT compiler
-    # Create a dummy coordinate vector filled with zeros
+    # Warmup Numba JIT compiler by passing dummy vector through evaluation entry point
     dummy_ind = np.zeros(2 * num_elements)
-    # Execute the evaluate function once so Numba compiles the code before starting actual work
+    # Force Numba to compile functions before starting timed optimization loops
     evaluate(dummy_ind, masses, lengths, widths, clearance, req_d_matrix, flat_offsets, offset_counts, offset_indices, is_back_side, clearance_dirs, panel_width, panel_height, border_spacing)
 
-    # Count how many CPU computing cores are available on the machine
+    # Detect active system CPU core count for parallel worker allocation
     cpu_cores = os.cpu_count() or 8
-    # Print status message stating hardware acceleration is active
+    # Print system execution parameters to console
     print(f"🚀 M3 Pro Acceleration Active | Available Cores: {cpu_cores}")
-    # Print message announcing the start of parallel optimization
+    # Print task execution status message
     print("⚡ Executing Parallel Differential Evolution with Border & Clearance Keepouts...\n")
     # Record current timestamp to measure total execution runtime
     start_time = time.time()
 
-    # Continue running optimization attempts until we collect 5 distinct valid layouts or hit attempt limit
+    # Execute optimization attempts until 5 distinct compliant solutions are found or max attempts reached
     while len(distinct_layouts) < 5 and attempt < max_attempts:
         # Increment attempt counter
         attempt += 1
-        # Generate a unique random number seed for this optimization attempt
+        # Generate random integer seed for Differential Evolution stochastic optimization
         seed = int(np.random.default_rng().integers(0, 2**31 - 1))
 
-        # Wrap attempt in a try block to handle any unexpected mathematical errors gracefully
+        # Enclose optimizer invocation in exception handling block to handle math errors safely
         try:
-            # Run Differential Evolution search algorithm across multiple CPU cores
+            # Execute Differential Evolution global optimization process across CPU cores
             result = differential_evolution(
                 evaluate, bounds,
                 args=(masses, lengths, widths, clearance, req_d_matrix, flat_offsets, offset_counts, offset_indices, is_back_side, clearance_dirs, panel_width, panel_height, border_spacing),
@@ -565,284 +564,261 @@ def run_optimization():
                 workers=-1, updating='deferred'
             )
             
-            # STRICT FILTER: Require 0.0 total penalty (Perfect physical compliance)
-            # Reject layout if penalty score is greater than 0.001 or contains invalid math numbers
+            # STRICT FILTER: Reject layout solutions containing non-zero penalty scores or numerical anomalies
             if result.fun > 1e-3 or np.any(np.isinf(result.x)) or np.any(np.isnan(result.x)):
-                # Skip invalid layout and try again
+                # Abandon non-compliant solution candidate
                 continue
 
-            # Extract X position coordinates from solution candidate
+            # Extract component center horizontal positions from solution vector
             cx_v = result.x[::2]
-            # Extract Y position coordinates from solution candidate
+            # Extract component center vertical positions from solution vector
             cy_v = result.x[1::2]
             
-            # Calculate total mass of all components combined
+            # Compute total assembly mass
             total_mass = np.sum(masses)
-            # Adjust horizontal coordinates for back-side components
+            # Compute absolute horizontal component positions considering back layer flip
             abs_x_positions = np.where(is_back_side == 1, -cx_v, cx_v)
-            # Compute actual final center of gravity X coordinate for this layout solution
+            # Compute evaluated layout horizontal Center of Gravity
             cg_x_v = np.sum(abs_x_positions * masses) / total_mass
-            # Compute actual final center of gravity Y coordinate for this layout solution
+            # Compute evaluated layout vertical Center of Gravity
             cg_y_v = np.sum(cy_v * masses) / total_mass
 
-            # Reject solution if center of gravity drift exceeds the 1.0mm tolerance limit
+            # Reject solution candidate if Center of Gravity drift breaches tolerance threshold (1.0 mm)
             if abs(cg_x_v) > CG_TOLERANCE or abs(cg_y_v) > CG_TOLERANCE:
-                # Skip layout and proceed to next attempt
+                # Abandon non-compliant solution candidate
                 continue
 
-            # Flag to verify this candidate solution is uniquely different from previously saved layouts
+            # Initialize flag to verify solution diversity relative to previously accepted solutions
             is_distinct = True
-            # Compare candidate layout against already collected layouts
+            # Compare candidate vector against existing distinct layout vectors
             for existing in distinct_layouts:
-                # If component position change is less than 6.0mm, consider it a duplicate
+                # Calculate maximum component position shift relative to existing solutions
                 if np.max(np.abs(result.x - existing)) < 6.0:
-                    # Mark as non-distinct
+                    # Mark solution as non-distinct duplicate
                     is_distinct = False
-                    # Stop checking further existing solutions
+                    # Terminate further comparative loop
                     break
 
-            # If the layout is valid, physically flawless, and unique
+            # Process candidate solution if unique, compliant, and verified
             if is_distinct:
-                # Append the solution vector to our distinct layout collection
+                # Append accepted solution vector to distinct layout store
                 distinct_layouts.append(result.x)
-                # Print progress message showing collected layout count and center-of-gravity offsets
+                # Print progress message detailing collected solution count and Center of Gravity offset
                 print(f"  [✓] Layout Solution {len(distinct_layouts)}/5 calculated | CG Offset: ({cg_x_v:.2f}, {cg_y_v:.2f}) mm")
 
-        # Catch and absorb computational failures during optimization without crashing the program
+        # Catch operational numerical exceptions to prevent script termination
         except Exception:
-            # Continue to next optimization attempt
+            # Continue to subsequent optimization attempt
             continue
 
-    # Print summary message showing total calculation time spent
+    # Log completion time summary to console
     print(f"\n✨ Execution completed in {time.time() - start_time:.2f}s. Saving plots...\n")
 
     # ================= SILENT IMAGE GENERATION & EXPORT =================
     # Check if at least one valid layout solution was successfully found
     if len(distinct_layouts) > 0:
-        # Sum total weight of components for final display report calculations
+        # Compute combined assembly mass sum for display reporting
         total_mass = np.sum(masses)
         
-        # Loop through each distinct layout solution to render visual diagrams and reports
+        # Iterate through distinct accepted layouts to generate visual reports
         for idx, layout in enumerate(distinct_layouts):
-            # Calculate human-friendly layout index number (1 to 5)
+            # Establish 1-indexed solution layout number
             layout_idx = idx + 1
-            # Extract horizontal (X) component coordinates for current layout
+            # Extract component horizontal center positions for layout instance
             cx_v = layout[::2]
-            # Extract vertical (Y) component coordinates for current layout
+            # Extract component vertical center positions for layout instance
             cy_v = layout[1::2]
-            # Convert X coordinates to absolute positions accounting for front/back orientation
+            # Compute absolute horizontal coordinates (normalized to FRONT-view coordinate system)
             abs_x_positions = np.where(is_back_side == 1, -cx_v, cx_v)
             
-            # Compute exact final Center of Gravity X value for diagram header text
+            # Compute exact evaluated X-axis Center of Gravity coordinate
             final_cg_x = np.sum(abs_x_positions * masses) / total_mass
-            # Compute exact final Center of Gravity Y value for diagram header text
+            # Compute exact evaluated Y-axis Center of Gravity coordinate
             final_cg_y = np.sum(cy_v * masses) / total_mass
             
-            # ---------------- IMAGE 1: STANDARD LAYOUT REPORT (UNTOUCHED) ----------------
-            # Create a high-resolution canvas figure (16x9 aspect ratio)
-            fig = plt.figure(figsize=(16, 9))
-            # Define a 2x2 grid layout inside the figure (top row for diagrams, bottom row for data table)
-            gs = fig.add_gridspec(2, 2, height_ratios=[7, 2.2], hspace=0.25)
+            # ---------------- IMAGE 1: STANDARD LAYOUT REPORT (CLEANED - NO TABLE) ----------------
+            # Create a high-resolution Matplotlib figure canvas
+            fig, (ax_f, ax_b) = plt.subplots(1, 2, figsize=(16, 7))
             
-            # Create subplot axis for Front Side view (top-left)
-            ax_f = fig.add_subplot(gs[0, 0])
-            # Create subplot axis for Back Side view (top-right)
-            ax_b = fig.add_subplot(gs[0, 1])
-            # Create subplot axis for data summary table (bottom full-width)
-            ax_table = fig.add_subplot(gs[1, :])
-            # Hide standard graph axes line borders for table subplot
-            ax_table.axis('off')
-            
-            # Add overarching main title showing layout number and exact calculated Center of Gravity offset
+            # Set figure main title displaying layout option index and exact Center of Gravity offset
             fig.suptitle(f"Layout Alternative {layout_idx}\nCombined Assembly CG Offset: ({final_cg_x:.4f}, {final_cg_y:.4f}) mm", 
                          fontsize=14, fontweight='bold')
             
-            # Draw board outline and border keepout region on both front and back view subplots
+            # Draw board substrate and border keepout zones across FRONT and BACK view subplots
             for ax in [ax_f, ax_b]:
-                # Draw main gray rectangle representing physical board body
+                # Render gray rectangle representing substrate body
                 ax.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2), panel_width, panel_height, color='lightgray', alpha=0.3))
-                # Draw top red shaded strip representing forbidden border keepout zone
+                # Render top red shaded strip representing forbidden border keepout zone
                 ax.add_patch(plt.Rectangle((-panel_width/2, panel_height/2 - border_spacing), panel_width, border_spacing, color='red', alpha=0.15))
-                # Draw bottom red shaded strip representing forbidden border keepout zone
+                # Render bottom red shaded strip representing forbidden border keepout zone
                 ax.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2), panel_width, border_spacing, color='red', alpha=0.15))
-                # Draw left red shaded strip representing forbidden border keepout zone
+                # Render left red shaded strip representing forbidden border keepout zone
                 ax.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.15))
-                # Draw right red shaded strip representing forbidden border keepout zone
+                # Render right red shaded strip representing forbidden border keepout zone
                 ax.add_patch(plt.Rectangle((panel_width/2 - border_spacing, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.15))
 
-            # Initialize an empty list to gather rows for the summary table
+            # Initialize empty list to accumulate data rows for summary table
             table_data = []
 
-            # Loop through components to plot shapes and collect summary table row information
+            # Render component graphics and gather metrics for display table
             for i in range(num_elements):
-                # Calculate radius of mounting pins
+                # Calculate radius of component mounting pins
                 ins_rad = insert_diams[i] / 2.0
-                # Look up pin list start memory index for component i
+                # Retrieve starting pin index pointer
                 i_start = offset_indices[i]
-                # Label layer string as 'BACK' or 'FRONT' for display
+                # Determine human-readable layer string indicator
                 side_str = "BACK" if is_back_side[i] else "FRONT"
                 
-                # Append a row of properties to the table data array
+                # APPEND DATA WITH SEPARATED X, Y AND FRONT-VIEW NORMALIZED X COORDINATE
                 table_data.append([
                     element_names[i],
                     side_str,
                     f"{masses[i]:.3f}",
                     f"{lengths[i]:.1f} x {widths[i]:.1f}" if element_shapes[i] == 'rectangle' else f"Ø {lengths[i]:.1f}",
-                    f"({cx_v[i]:.2f}, {cy_v[i]:.2f})"
+                    f"{abs_x_positions[i]:.2f}",
+                    f"{cy_v[i]:.2f}"
                 ])
                 
-                # Unpack directional clearances for component i
+                # Extract directional clearance values for component 'i'
                 c_top, c_right, c_bot, c_left = clearance_dirs[i]
 
-                # Draw component graphics if mounted on the Front Side
+                # Draw graphics for FRONT-mounted components
                 if not is_back_side[i]: 
-                    # Set exact coordinates
+                    # Set component coordinates
                     ex, ey = cx_v[i], cy_v[i]
-                    # Draw rectangular component shapes on Front view
+                    # Render rectangular component geometry on FRONT view
                     if element_shapes[i] == 'rectangle':
-                        # Calculate clearance boundary box coordinates
+                        # Calculate clearance boundary origin coordinates
                         c_x = ex - lengths[i]/2.0 - c_left
                         c_y = ey - widths[i]/2.0 - c_bot
                         c_w = lengths[i] + c_left + c_right
                         c_h = widths[i] + c_top + c_bot
-                        # Draw light blue dashed clearance box
+                        # Draw light blue dashed keepout boundary box
                         ax_f.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, facecolor='#A9C7EB', edgecolor='crimson', linestyle='--', linewidth=1.2, alpha=0.5))
-                        # Draw solid blue rectangle representing actual component body
+                        # Draw solid blue rectangle representing physical component body
                         ax_f.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.9, edgecolor='navy', linewidth=1.5))
-                    # Draw circular component shapes on Front view
+                    # Render circular component geometry on FRONT view
                     else:
-                        # Draw dashed circle for clearance area
+                        # Draw light blue dashed keepout boundary circle
                         ax_f.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, facecolor='#A9C7EB', edgecolor='crimson', linestyle='--', linewidth=1.2, alpha=0.5))
-                        # Draw solid blue circle representing actual component body
+                        # Draw solid blue circle representing physical component body
                         ax_f.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.9, edgecolor='navy', linewidth=1.5))
                     
-                    # Draw pin circles for front side component
+                    # Render mounting pins for FRONT component
                     for ii in range(offset_counts[i]):
-                        # Retrieve relative pin offset coordinates
+                        # Extract relative pin displacement
                         dx, dy = flat_offsets[i_start + ii]
-                        # Draw crimson red pin circle on Front view
+                        # Render crimson pin circle on FRONT subplot
                         ax_f.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson', zorder=4))
-                        # Draw mirrored pin circle trace on Back view for visual alignment reference
+                        # Render mirrored reference pin trace on BACK subplot for visual alignment
                         ax_b.add_patch(plt.Circle((-(ex + dx), ey + dy), ins_rad, facecolor='crimson', edgecolor='#5C0612', linewidth=1.5, alpha=0.6, zorder=3))
                         
-                    # Print component name string at the center of the component body
+                    # Annotate component name text string at physical body center
                     ax_f.text(ex, ey, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
                     
-                    # Calculate horizontally mirrored coordinate for reference trace on back side
+                    # Compute mirrored X-coordinate for reference trace on BACK subplot
                     ex_trace_b = -cx_v[i]
-                    # Draw dashed outline trace on Back view showing component position on opposite side
+                    # Render dashed component body reference outline on BACK subplot
                     if element_shapes[i] == 'rectangle':
                         ax_b.add_patch(plt.Rectangle((ex_trace_b - lengths[i]/2, cy_v[i] - widths[i]/2), lengths[i], widths[i], fill=False, linestyle='--', edgecolor='navy', linewidth=1.2, alpha=0.7))
                     else:
                         ax_b.add_patch(plt.Circle((ex_trace_b, cy_v[i]), lengths[i]/2, fill=False, linestyle='--', edgecolor='navy', linewidth=1.2, alpha=0.7))
-                # Draw component graphics if mounted on the Back Side
+                # Draw graphics for BACK-mounted components
                 else:
-                    # Set exact coordinates
+                    # Set component coordinates
                     ex_b, ey_b = cx_v[i], cy_v[i]
-                    # Draw rectangular component shapes on Back view
+                    # Render rectangular component geometry on BACK view
                     if element_shapes[i] == 'rectangle':
-                        # Calculate clearance boundary box coordinates
+                        # Calculate clearance boundary origin coordinates
                         c_x = ex_b - lengths[i]/2.0 - c_left
                         c_y = ey_b - widths[i]/2.0 - c_bot
                         c_w = lengths[i] + c_left + c_right
                         c_h = widths[i] + c_top + c_bot
-                        # Draw light green dashed clearance box
+                        # Draw light green dashed keepout boundary box
                         ax_b.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, facecolor='#A3D1A3', edgecolor='darkgreen', linestyle='--', linewidth=1.2, alpha=0.5))
-                        # Draw solid dark green rectangle representing actual component body
+                        # Draw solid dark green rectangle representing physical component body
                         ax_b.add_patch(plt.Rectangle((ex_b - lengths[i]/2, ey_b - widths[i]/2), lengths[i], widths[i], color='darkgreen', alpha=0.9, edgecolor='darkslategrey', linewidth=1.5))
-                    # Draw circular component shapes on Back view
+                    # Render circular component geometry on BACK view
                     else:
-                        # Draw dashed circle for clearance area
+                        # Draw light green dashed keepout boundary circle
                         ax_b.add_patch(plt.Circle((ex_b, ey_b), lengths[i]/2 + clearance, facecolor='#A3D1A3', edgecolor='darkgreen', linestyle='--', linewidth=1.2, alpha=0.5))
-                        # Draw solid dark green circle representing component body
+                        # Draw solid dark green circle representing physical component body
                         ax_b.add_patch(plt.Circle((ex_b, ey_b), lengths[i]/2, color='darkgreen', alpha=0.9, edgecolor='darkslategrey', linewidth=1.5))
                     
-                    # Draw pin circles for back side component
+                    # Render mounting pins for BACK component
                     for ii in range(offset_counts[i]):
-                        # Retrieve relative pin offset coordinates
+                        # Extract relative pin displacement
                         dx, dy = flat_offsets[i_start + ii]
-                        # Draw orange pin circle on Back view
+                        # Render orange pin circle on BACK subplot
                         ax_b.add_patch(plt.Circle((ex_b + dx, ey_b + dy), ins_rad, color='orange', zorder=4))
-                        # Draw mirrored pin circle trace on Front view for alignment reference
+                        # Render mirrored reference pin trace on FRONT subplot for visual alignment
                         ax_f.add_patch(plt.Circle((-(ex_b + dx), ey_b + dy), ins_rad, facecolor='orange', edgecolor='#733D00', linewidth=1.5, alpha=0.6, zorder=3))
                         
-                    # Print component name string at center of body
+                    # Annotate component name text string at physical body center
                     ax_b.text(ex_b, ey_b, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
                     
-                    # Calculate horizontally mirrored coordinate for reference trace on front side
+                    # Compute mirrored X-coordinate for reference trace on FRONT subplot
                     ex_trace_f = -cx_v[i]
-                    # Draw dashed outline trace on Front view showing back component location
+                    # Render dashed component body reference outline on FRONT subplot
                     if element_shapes[i] == 'rectangle':
                         ax_f.add_patch(plt.Rectangle((ex_trace_f - lengths[i]/2, cy_v[i] - widths[i]/2), lengths[i], widths[i], fill=False, linestyle='--', edgecolor='darkslategrey', linewidth=1.2, alpha=0.7))
                     else:
                         ax_f.add_patch(plt.Circle((ex_trace_f, cy_v[i]), lengths[i]/2, fill=False, linestyle='--', edgecolor='darkslategrey', linewidth=1.2, alpha=0.7))
 
-            # Apply titles, axis limits, aspect ratios, and gridlines to both front and back subplots
+            # Apply title, axis limits, aspect ratio, and grid formatting to subplots
             for name, ax in [("FRONT SIDE VIEW", ax_f), ("BACK SIDE VIEW (FLIPPED)", ax_b)]:
-                # Set subplot section title string
+                # Set subplot heading title
                 ax.set_title(name, fontweight='bold', fontsize=11)
-                # Set horizontal X axis limits slightly wider than physical board width
+                # Set horizontal X axis view limits with padding
                 ax.set_xlim(-panel_width/2 - 10, panel_width/2 + 10)
-                # Set vertical Y axis limits slightly wider than physical board height
+                # Set vertical Y axis view limits with padding
                 ax.set_ylim(-panel_height/2 - 10, panel_height/2 + 10)
-                # Ensure 1:1 scale proportions so shapes do not distort visually
+                # Force equal 1:1 scaling across coordinate axes
                 ax.set_aspect('equal')
-                # Draw light dotted grid lines across graph
+                # Draw grid lines on subplot background
                 ax.grid(True, linestyle=':', alpha=0.5)
             
-            # Define column header labels for the bottom summary table
-            headers = ["Component Name", "Layer Placement", "Mass (kg)", "Dimensions (mm)", "CoG Coordinates (X, Y)"]
-            # Render formatted data table onto table subplot axis
-            ui_table = ax_table.table(cellText=table_data, colLabels=headers, loc='center', cellLoc='center')
-            # Disable automatic font resizing so custom font size takes effect
-            ui_table.auto_set_font_size(False)
-            # Set table text size to 9pt
-            ui_table.set_fontsize(9)
-            # Scale table height and width for clean spacing
-            ui_table.scale(1.0, 1.3)
-            
-            # Style table header row with dark background and bold white text
-            for col_idx in range(len(headers)):
-                # Access individual top header cell
-                cell = ui_table[0, col_idx]
-                # Apply bold formatting and white font color
-                cell.set_text_props(weight='bold', color='white')
-                # Set background fill color to dark slate blue
-                cell.set_facecolor('#2C3E50')
-            
-            # Adjust spacing automatically to avoid overlapping text elements
+            # Adjust figure layout spacing automatically
             plt.tight_layout()
-            # Construct output file path string for saving main layout report image
+            # Define target path string for main report image
             main_layout_path = os.path.join(OUTPUT_DIR, f"layout_{layout_idx}_main.png")
-            # Save high-resolution PNG image to disk
+            # Save figure to file as high-resolution PNG image
             plt.savefig(main_layout_path, dpi=200, bbox_inches='tight')
-            # Close figure canvas memory to keep system fast
+            # Release figure canvas memory allocation
             plt.close(fig)
 
-            # ---------------- IMAGE 2: DISTANCE PROXIMITY MAPPING (FRONT SIDE PROJECTION) ----------------
-            # Create second image figure for pin safety distance analysis map on the Front Side
-            fig_c, ax_c = plt.subplots(figsize=(13, 9))
-            # Set title heading for distance proximity verification map viewed from Front Perspective
+            # ---------------- IMAGE 2: DISTANCE PROXIMITY MAPPING + COMPONENT TABLE AT BOTTOM ----------------
+            # Create high-resolution figure canvas (2 rows: top for mapping diagram, bottom for summary table)
+            fig_c = plt.figure(figsize=(16, 11))
+            gs_c = fig_c.add_gridspec(2, 1, height_ratios=[6.5, 2.5], hspace=0.20)
+            
+            # Assign top subplot for proximity distance map
+            ax_c = fig_c.add_subplot(gs_c[0, 0])
+            # Assign bottom subplot for table display
+            ax_table = fig_c.add_subplot(gs_c[1, 0])
+            ax_table.axis('off')
+
+            # Set main title for distance verification plot
             fig_c.suptitle(f"Layout Alternative {layout_idx} — Inter-Insert Proximity Verification (< 40mm)\n(Front Side Projection View)", 
                            fontsize=13, fontweight='bold')
             
-            # Draw board outline and border keepout region on proximity figure
+            # Render substrate outline and border keepout region on proximity map
             ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2), panel_width, panel_height, color='lightgray', alpha=0.2))
             ax_c.add_patch(plt.Rectangle((-panel_width/2, panel_height/2 - border_spacing), panel_width, border_spacing, color='red', alpha=0.08))
             ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2), panel_width, border_spacing, color='red', alpha=0.08))
             ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.08))
             ax_c.add_patch(plt.Rectangle((panel_width/2 - border_spacing, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.08))
 
-            # Plot components, clearance boxes, and insert hole pins projected onto Front Side Perspective
+            # Render all components and pins projected onto FRONT side view space
             for i in range(num_elements):
-                # Retrieve pin list start memory index for component i
+                # Retrieve starting pin index pointer
                 i_start = offset_indices[i]
-                # Calculate pin radius
+                # Compute pin radius
                 ins_rad = insert_diams[i] / 2.0
                 ey = cy_v[i]
                 c_top, c_right, c_bot, c_left = clearance_dirs[i]
 
-                # Draw FRONT-SIDE components (Solid Blue Body + Light Blue Dashed Clearance Box + Crimson Pins)
+                # Render FRONT-layer component graphics
                 if not is_back_side[i]:
                     ex = cx_v[i]
                     if element_shapes[i] == 'rectangle':
@@ -850,28 +826,28 @@ def run_optimization():
                         c_y = ey - widths[i]/2.0 - c_bot
                         c_w = lengths[i] + c_left + c_right
                         c_h = widths[i] + c_top + c_bot
-                        # Dashed clearance box
+                        # Render clearance box
                         ax_c.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, facecolor='#A9C7EB', edgecolor='crimson', linestyle='--', linewidth=1.2, alpha=0.35))
-                        # Solid body
+                        # Render solid body
                         ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.75, edgecolor='navy', linewidth=1.5))
                     else:
-                        # Circular clearance and body
+                        # Render clearance circle and solid body
                         ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, facecolor='#A9C7EB', edgecolor='crimson', linestyle='--', linewidth=1.2, alpha=0.35))
                         ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.75, edgecolor='navy', linewidth=1.5))
                     
-                    # Draw front mounting pin insert holes
+                    # Render mounting pins for front component
                     for ii in range(offset_counts[i]):
                         dx, dy = flat_offsets[i_start + ii]
                         ax_c.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson', zorder=4))
                         
-                    # Component Name label
+                    # Annotate component name
                     ax_c.text(ex, ey, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
 
-                # Draw BACK-SIDE components projected onto Front View (Dotted Outline + Light Green Clearance + Orange Pins)
+                # Render BACK-layer component graphics projected onto FRONT view space
                 else:
-                    # In Front view projection, Back component center is mirrored (-cx_v[i])
+                    # Mirror X-coordinate for projection onto FRONT perspective
                     ex = -cx_v[i]
-                    # Swap left and right clearances for front projection
+                    # Swap left and right clearances for projected orientation
                     c_left_proj, c_right_proj = c_right, c_left
                     
                     if element_shapes[i] == 'rectangle':
@@ -879,115 +855,128 @@ def run_optimization():
                         c_y = ey - widths[i]/2.0 - c_bot
                         c_w = lengths[i] + c_left_proj + c_right_proj
                         c_h = widths[i] + c_top + c_bot
-                        # Dashed clearance box for back component
+                        # Render projected clearance box
                         ax_c.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, facecolor='#A3D1A3', edgecolor='darkgreen', linestyle=':', linewidth=1.2, alpha=0.35))
-                        # Dotted outline for back component body
+                        # Render projected body outline
                         ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], fill=False, linestyle='--', edgecolor='darkgreen', linewidth=1.5, zorder=3))
                     else:
-                        # Circular clearance and body for back component
+                        # Render projected clearance circle and outline
                         ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, facecolor='#A3D1A3', edgecolor='darkgreen', linestyle=':', linewidth=1.2, alpha=0.35))
                         ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, fill=False, linestyle='--', edgecolor='darkgreen', linewidth=1.5, zorder=3))
                     
-                    # Draw back mounting pin insert holes mirrored to Front View projection space
+                    # Render projected mounting pins for back component
                     for ii in range(offset_counts[i]):
                         dx, dy = flat_offsets[i_start + ii]
                         ax_c.add_patch(plt.Circle((ex - dx, ey + dy), ins_rad, facecolor='orange', edgecolor='#733D00', linewidth=1.2, alpha=0.85, zorder=4))
                         
-                    # Component Name label for back component
+                    # Annotate component name
                     ax_c.text(ex, ey, element_names[i], color='darkgreen', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
 
-            # Initialize a list to hold text description strings for close pin pairs
+            # Initialize tracking list for close pin pair label text strings
             close_pairs_labels = []
-            # Reset letter counter index to zero
+            # Reset alphabetic index counter to zero
             label_counter = 0
-            # Define alphabet lookup string for labeling pin pair distance lines (a, b, c...)
+            # Define lookup string containing alphabetic characters for line annotations
             alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-            # Measure actual 3D physical distances between all pins to detect any close pairs (< 40mm)
+            # Compute pairwise 3D physical distances between all pins to highlight close pairs (< 40mm)
             for i in range(num_elements):
                 i_start = offset_indices[i]
                 for j in range(i + 1, num_elements):
                     j_start = offset_indices[j]
                     
-                    # Loop through every pin of component i
+                    # Iterate through pins of component 'i'
                     for ii in range(offset_counts[i]):
                         idx_i = i_start + ii
-                        # Absolute physical position calculation
+                        # Compute absolute physical coordinate of pin 'i'
                         xi_abs = abs_x_positions[i] + (-flat_offsets[idx_i, 0] if is_back_side[i] else flat_offsets[idx_i, 0])
                         yi_abs = cy_v[i] + flat_offsets[idx_i, 1]
                         
-                        # Loop through every pin of component j
+                        # Iterate through pins of component 'j'
                         for jj in range(offset_counts[j]):
                             idx_j = j_start + jj
-                            # Absolute physical position calculation
+                            # Compute absolute physical coordinate of pin 'j'
                             xj_abs = abs_x_positions[j] + (-flat_offsets[idx_j, 0] if is_back_side[j] else flat_offsets[idx_j, 0])
                             yj_abs = cy_v[j] + flat_offsets[idx_j, 1]
                             
-                            # Calculate straight-line Euclidean distance between pin pair
+                            # Calculate Euclidean distance between pin pair
                             dist = np.sqrt((xi_abs - xj_abs)**2 + (yi_abs - yj_abs)**2)
                             
-                            # If pin separation distance is less than 40.0mm, mark and highlight on diagram
+                            # Check if pin separation distance is less than 40.0mm threshold
                             if dist < 40.0:
-                                # Calculate Front-projection plot coordinates for pin i
+                                # Determine projected plot X coordinate for pin 'i'
                                 xf1 = cx_v[i] + flat_offsets[idx_i, 0] if not is_back_side[i] else -(cx_v[i] + flat_offsets[idx_i, 0])
                                 yf1 = cy_v[i] + flat_offsets[idx_i, 1]
-                                # Calculate Front-projection plot coordinates for pin j
+                                # Determine projected plot X coordinate for pin 'j'
                                 xf2 = cx_v[j] + flat_offsets[idx_j, 0] if not is_back_side[j] else -(cx_v[j] + flat_offsets[idx_j, 0])
                                 yf2 = cy_v[j] + flat_offsets[idx_j, 1]
                                 
-                                # Assign next letter from alphabet list
+                                # Select current letter label from alphabet lookup string
                                 current_letter = alphabet[label_counter % len(alphabet)]
-                                # Increment letter counter
+                                # Increment label index counter
                                 label_counter += 1
                                 
-                                # Draw purple dashed line connecting the two close pins
+                                # Render purple dashed line connecting close pin pair
                                 ax_c.plot([xf1, xf2], [yf1, yf2], color='purple', linestyle='--', linewidth=1.5, alpha=0.85, zorder=10)
-                                # Draw purple circle badge displaying current letter code at line midpoint
+                                # Render letter badge at line midpoint
                                 ax_c.text((xf1 + xf2)/2, (yf1 + yf2)/2, current_letter, color='white', 
                                           fontsize=8, fontweight='bold', ha='center', va='center',
                                           bbox=dict(boxstyle="circle,pad=0.2", fc="darkmagenta", ec="none", alpha=0.9), zorder=11)
                                 
-                                # Record formatted summary string detailing pin distance and component names
+                                # Append entry string to proximity summary log list
                                 close_pairs_labels.append(f"{current_letter} — {dist:.2f} mm ({element_names[i]} ↔ {element_names[j]})")
 
-            # Draw side legend box displaying summary list of all close pin separation distances
+            # Render text legend box detailing close pin distances if any are detected
             if close_pairs_labels:
-                # Combine close pin descriptions into single multi-line string block
+                # Format array of proximity strings into single line-separated block
                 legend_box_text = "\n".join(close_pairs_labels)
-                # Render text box on right side of plot
+                # Render text box on right side of figure panel
                 ax_c.text(1.02, 0.95, f"Pin Distances Summary:\n\n{legend_box_text}", 
                           transform=ax_c.transAxes, fontsize=9, verticalalignment='top',
                           bbox=dict(boxstyle="round,pad=0.5", fc="#F8F9F9", ec="#BDC3C7", lw=1.2))
-            # If no pins are under 40mm distance, display clear confirmation text
+            # Render text box indicating full pin spacing compliance if no close pairs exist
             else:
-                # Render green clear confirmation text box
+                # Render clear compliance text box
                 ax_c.text(1.02, 0.95, "Pin Distances Summary:\n\nNo insert violations\nor pins found under 40mm.", 
                           transform=ax_c.transAxes, fontsize=9, verticalalignment='top',
                           bbox=dict(boxstyle="round,pad=0.5", fc="#F8F9F9", ec="#BDC3C7", lw=1.2))
 
-            # Create visual color patches for map legend
+            # Create visual color patches for diagram key legend
             front_patch = mpatches.Patch(color='royalblue', alpha=0.75, label='Front Layer Components')
             back_patch = mpatches.Patch(facecolor='none', edgecolor='darkgreen', linestyle='--', label='Back Layer Components (Projected Outline)')
-            # Add color legend key at bottom left of map
+            # Attach legend key box to lower left corner of plot
             ax_c.legend(handles=[front_patch, back_patch], loc='lower left')
 
-            # Set plot bounds, equal scaling, and grid formatting
+            # Set plot axis limits, equal aspect ratio, and background grid
             ax_c.set_xlim(-panel_width/2 - 10, panel_width/2 + 10)
             ax_c.set_ylim(-panel_height/2 - 10, panel_height/2 + 10)
             ax_c.set_aspect('equal')
             ax_c.grid(True, linestyle=':', alpha=0.4)
+
+            # RENDER THE COMPONENT SUMMARY TABLE IN THE MAPPING IMAGE (IMAGE 2)
+            headers = ["Component Name", "Layer Placement", "Mass (kg)", "Dimensions (mm)", "CoG X (mm)", "CoG Y (mm)"]
+            ui_table = ax_table.table(cellText=table_data, colLabels=headers, loc='center', cellLoc='center')
+            ui_table.auto_set_font_size(False)
+            ui_table.set_fontsize(9)
+            ui_table.scale(1.0, 1.3)
             
-            # Construct output filename path string for proximity map image
+            # Style table column headers with dark background and white bold text
+            for col_idx in range(len(headers)):
+                cell = ui_table[0, col_idx]
+                cell.set_text_props(weight='bold', color='white')
+                cell.set_facecolor('#2C3E50')
+            
+            # Construct output file path for distance map image
             distance_layout_path = os.path.join(OUTPUT_DIR, f"layout_{layout_idx}_distance_map.png")
-            # Save distance map image to disk
+            # Save distance map image as high-resolution PNG file
             plt.savefig(distance_layout_path, dpi=200, bbox_inches='tight')
-            # Close figure canvas memory
+            # Release figure canvas memory allocation
             plt.close(fig_c)
 
-        # Print final confirmation message displaying full path where report images were written
+        # Print export path confirmation log to console
         print(f"📁 All images generated and saved to: {os.path.abspath(OUTPUT_DIR)}/")
 
-# Check if this script is being run directly by the user (as the main program entry point)
+# Check if script is being executed as main entry point
 if __name__ == '__main__':
-    # Launch the complete optimization process
+    # Launch optimization workflow execution
     run_optimization()

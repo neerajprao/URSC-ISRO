@@ -638,7 +638,7 @@ def run_optimization():
             # Compute exact final Center of Gravity Y value for diagram header text
             final_cg_y = np.sum(cy_v * masses) / total_mass
             
-            # ---------------- IMAGE 1: STANDARD LAYOUT REPORT ----------------
+            # ---------------- IMAGE 1: STANDARD LAYOUT REPORT (UNTOUCHED) ----------------
             # Create a high-resolution canvas figure (16x9 aspect ratio)
             fig = plt.figure(figsize=(16, 9))
             # Define a 2x2 grid layout inside the figure (top row for diagrams, bottom row for data table)
@@ -819,11 +819,11 @@ def run_optimization():
             # Close figure canvas memory to keep system fast
             plt.close(fig)
 
-            # ---------------- IMAGE 2: CLEARANCE & DISTANCE PROXIMITY ENGINE ----------------
-            # Create second image figure for pin safety distance analysis map
+            # ---------------- IMAGE 2: DISTANCE PROXIMITY MAPPING (FRONT SIDE PROJECTION) ----------------
+            # Create second image figure for pin safety distance analysis map on the Front Side
             fig_c, ax_c = plt.subplots(figsize=(13, 9))
-            # Set title heading for distance proximity verification map
-            fig_c.suptitle(f"Layout Alternative {layout_idx} — Inter-Insert Proximity Verification (< 40mm)\n(Combined Layer Projection Space)", 
+            # Set title heading for distance proximity verification map viewed from Front Perspective
+            fig_c.suptitle(f"Layout Alternative {layout_idx} — Inter-Insert Proximity Verification (< 40mm)\n(Front Side Projection View)", 
                            fontsize=13, fontweight='bold')
             
             # Draw board outline and border keepout region on proximity figure
@@ -833,61 +833,68 @@ def run_optimization():
             ax_c.add_patch(plt.Rectangle((-panel_width/2, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.08))
             ax_c.add_patch(plt.Rectangle((panel_width/2 - border_spacing, -panel_height/2 + border_spacing), border_spacing, panel_height - 2*border_spacing, color='red', alpha=0.08))
 
-            # Plot components and pin centers onto combined single projection space
+            # Plot components, clearance boxes, and insert hole pins projected onto Front Side Perspective
             for i in range(num_elements):
                 # Retrieve pin list start memory index for component i
                 i_start = offset_indices[i]
                 # Calculate pin radius
                 ins_rad = insert_diams[i] / 2.0
-                
-                # Determine absolute X center coordinate based on front/back layer orientation
-                ex = cx_v[i] if not is_back_side[i] else -cx_v[i]
-                # Set Y center coordinate
                 ey = cy_v[i]
-                # Read directional clearance margins
                 c_top, c_right, c_bot, c_left = clearance_dirs[i]
 
-                # Draw front-side components on proximity map
+                # Draw FRONT-SIDE components (Solid Blue Body + Light Blue Dashed Clearance Box + Crimson Pins)
                 if not is_back_side[i]:
-                    # Draw rectangle body and clearance boundary outline
+                    ex = cx_v[i]
                     if element_shapes[i] == 'rectangle':
                         c_x = ex - lengths[i]/2.0 - c_left
                         c_y = ey - widths[i]/2.0 - c_bot
                         c_w = lengths[i] + c_left + c_right
                         c_h = widths[i] + c_top + c_bot
-                        ax_c.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, fill=False, edgecolor='red', linestyle=':', linewidth=1.0))
-                        ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.25, edgecolor='navy', linewidth=1.2))
-                    # Draw circle body and clearance boundary outline
+                        # Dashed clearance box
+                        ax_c.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, facecolor='#A9C7EB', edgecolor='crimson', linestyle='--', linewidth=1.2, alpha=0.35))
+                        # Solid body
+                        ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='royalblue', alpha=0.75, edgecolor='navy', linewidth=1.5))
                     else:
-                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, fill=False, edgecolor='red', linestyle=':', linewidth=1.0))
-                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.25, edgecolor='navy', linewidth=1.2))
+                        # Circular clearance and body
+                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, facecolor='#A9C7EB', edgecolor='crimson', linestyle='--', linewidth=1.2, alpha=0.35))
+                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='royalblue', alpha=0.75, edgecolor='navy', linewidth=1.5))
                     
-                    # Draw front pins as crimson red dots
+                    # Draw front mounting pin insert holes
                     for ii in range(offset_counts[i]):
                         dx, dy = flat_offsets[i_start + ii]
-                        ax_c.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson', alpha=0.7, zorder=4))
-                # Draw back-side components on proximity map
+                        ax_c.add_patch(plt.Circle((ex + dx, ey + dy), ins_rad, color='crimson', zorder=4))
+                        
+                    # Component Name label
+                    ax_c.text(ex, ey, element_names[i], color='white', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
+
+                # Draw BACK-SIDE components projected onto Front View (Dotted Outline + Light Green Clearance + Orange Pins)
                 else:
-                    # Draw rectangle body and clearance boundary outline
-                    if element_shapes[i] == 'rectangle':
-                        c_x = ex - lengths[i]/2.0 - c_left
-                        c_y = ey - widths[i]/2.0 - c_bot
-                        c_w = lengths[i] + c_left + c_right
-                        c_h = widths[i] + c_top + c_bot
-                        ax_c.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, fill=False, edgecolor='green', linestyle=':', linewidth=1.0))
-                        ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], color='darkgreen', alpha=0.25, edgecolor='darkslategrey', linewidth=1.2))
-                    # Draw circle body and clearance boundary outline
-                    else:
-                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, fill=False, edgecolor='green', linestyle=':', linewidth=1.0))
-                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, color='darkgreen', alpha=0.25, edgecolor='darkslategrey', linewidth=1.2))
+                    # In Front view projection, Back component center is mirrored (-cx_v[i])
+                    ex = -cx_v[i]
+                    # Swap left and right clearances for front projection
+                    c_left_proj, c_right_proj = c_right, c_left
                     
-                    # Draw back pins as orange dots
+                    if element_shapes[i] == 'rectangle':
+                        c_x = ex - lengths[i]/2.0 - c_left_proj
+                        c_y = ey - widths[i]/2.0 - c_bot
+                        c_w = lengths[i] + c_left_proj + c_right_proj
+                        c_h = widths[i] + c_top + c_bot
+                        # Dashed clearance box for back component
+                        ax_c.add_patch(plt.Rectangle((c_x, c_y), c_w, c_h, facecolor='#A3D1A3', edgecolor='darkgreen', linestyle=':', linewidth=1.2, alpha=0.35))
+                        # Dotted outline for back component body
+                        ax_c.add_patch(plt.Rectangle((ex - lengths[i]/2, ey - widths[i]/2), lengths[i], widths[i], fill=False, linestyle='--', edgecolor='darkgreen', linewidth=1.5, zorder=3))
+                    else:
+                        # Circular clearance and body for back component
+                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2 + clearance, facecolor='#A3D1A3', edgecolor='darkgreen', linestyle=':', linewidth=1.2, alpha=0.35))
+                        ax_c.add_patch(plt.Circle((ex, ey), lengths[i]/2, fill=False, linestyle='--', edgecolor='darkgreen', linewidth=1.5, zorder=3))
+                    
+                    # Draw back mounting pin insert holes mirrored to Front View projection space
                     for ii in range(offset_counts[i]):
                         dx, dy = flat_offsets[i_start + ii]
-                        ax_c.add_patch(plt.Circle((ex - dx, ey + dy), ins_rad, color='orange', alpha=0.7, zorder=4))
-                
-                # Overlay name label text at component center
-                ax_c.text(ex, ey, element_names[i], color='black', alpha=0.6, ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
+                        ax_c.add_patch(plt.Circle((ex - dx, ey + dy), ins_rad, facecolor='orange', edgecolor='#733D00', linewidth=1.2, alpha=0.85, zorder=4))
+                        
+                    # Component Name label for back component
+                    ax_c.text(ex, ey, element_names[i], color='darkgreen', ha='center', va='center', fontsize=8, fontweight='bold', zorder=5)
 
             # Initialize a list to hold text description strings for close pin pairs
             close_pairs_labels = []
@@ -898,23 +905,21 @@ def run_optimization():
 
             # Measure actual 3D physical distances between all pins to detect any close pairs (< 40mm)
             for i in range(num_elements):
-                # Retrieve memory start index for component i pins
                 i_start = offset_indices[i]
                 for j in range(i + 1, num_elements):
-                    # Retrieve memory start index for component j pins
                     j_start = offset_indices[j]
                     
                     # Loop through every pin of component i
                     for ii in range(offset_counts[i]):
                         idx_i = i_start + ii
-                        # Compute absolute 2D position of pin ii
+                        # Absolute physical position calculation
                         xi_abs = abs_x_positions[i] + (-flat_offsets[idx_i, 0] if is_back_side[i] else flat_offsets[idx_i, 0])
                         yi_abs = cy_v[i] + flat_offsets[idx_i, 1]
                         
                         # Loop through every pin of component j
                         for jj in range(offset_counts[j]):
                             idx_j = j_start + jj
-                            # Compute absolute 2D position of pin jj
+                            # Absolute physical position calculation
                             xj_abs = abs_x_positions[j] + (-flat_offsets[idx_j, 0] if is_back_side[j] else flat_offsets[idx_j, 0])
                             yj_abs = cy_v[j] + flat_offsets[idx_j, 1]
                             
@@ -923,10 +928,10 @@ def run_optimization():
                             
                             # If pin separation distance is less than 40.0mm, mark and highlight on diagram
                             if dist < 40.0:
-                                # Calculate diagram plot coordinates for pin i
+                                # Calculate Front-projection plot coordinates for pin i
                                 xf1 = cx_v[i] + flat_offsets[idx_i, 0] if not is_back_side[i] else -(cx_v[i] + flat_offsets[idx_i, 0])
                                 yf1 = cy_v[i] + flat_offsets[idx_i, 1]
-                                # Calculate diagram plot coordinates for pin j
+                                # Calculate Front-projection plot coordinates for pin j
                                 xf2 = cx_v[j] + flat_offsets[idx_j, 0] if not is_back_side[j] else -(cx_v[j] + flat_offsets[idx_j, 0])
                                 yf2 = cy_v[j] + flat_offsets[idx_j, 1]
                                 
@@ -961,8 +966,8 @@ def run_optimization():
                           bbox=dict(boxstyle="round,pad=0.5", fc="#F8F9F9", ec="#BDC3C7", lw=1.2))
 
             # Create visual color patches for map legend
-            front_patch = mpatches.Patch(color='royalblue', alpha=0.4, label='Front Layer Components')
-            back_patch = mpatches.Patch(color='darkgreen', alpha=0.4, label='Back Layer Components')
+            front_patch = mpatches.Patch(color='royalblue', alpha=0.75, label='Front Layer Components')
+            back_patch = mpatches.Patch(facecolor='none', edgecolor='darkgreen', linestyle='--', label='Back Layer Components (Projected Outline)')
             # Add color legend key at bottom left of map
             ax_c.legend(handles=[front_patch, back_patch], loc='lower left')
 

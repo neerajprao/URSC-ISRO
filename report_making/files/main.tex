@@ -110,42 +110,52 @@
 % ======================================================================
 % TITLE PAGE
 % ======================================================================
+% ======================================================================
+% TITLE PAGE
+% ======================================================================
 \begin{titlepage}
+\thispagestyle{empty}
 \centering
-\vspace*{1cm}
+\bfseries
 
-{\large \bfseries U R Rao Satellite Centre (URSC)}\\[2pt]
-{\large Indian Space Research Organisation (ISRO)}\\[6pt]
-{\normalsize Mechanical Integration Division -- 1, Systems Integration Group}\\[1.5cm]
+\vspace*{1.25cm}
 
-\rule{\linewidth}{0.5pt}\\[0.6cm]
-{\Huge \bfseries Optimization of Spacecraft \\[2pt] Configuration}\\[0.5cm]
-{\Large Automated Dual-Sided Component Placement using \\ Differential Evolution, CMA-ES and Deep Reinforcement Learning (PPO)}\\[0.6cm]
-\rule{\linewidth}{0.5pt}\\[1.5cm]
+{\Large Internship Report}\\[0.18cm]
+{\Large On}\\[0.35cm]
 
-{\large \bfseries Internship Project Report}\\[0.3cm]
-{\normalsize Submitted in partial fulfilment of the requirements of the ISRO-URSC Internship Programme}\\[2cm]
+{\fontsize{22}{27}\selectfont OPTIMIZATION OF SPACECRAFT\\[0.5cm]
+CONFIGURATION}\\[1.45cm]
 
-\begin{minipage}{0.45\textwidth}
-\begin{flushleft}
-\large
-\textbf{Submitted by:}\\
-Neeraj P Rao\\
-B.Tech (Hons.) Computer Science and Engineering\\
-RV University, Bengaluru
-\end{flushleft}
+{\Large Submitted by}\\[0.18cm]
+{\fontsize{19}{23}\selectfont Neeraj P Rao}\\[0.12cm]
+{\fontsize{17}{21}\selectfont B.tech (Hons.) RV University Bengaluru}\\[1.35cm]
+
+{\Large Under the Guidance of}\\[0.18cm]
+{\fontsize{17}{21}\selectfont Shri. Shravan Kumar Thakur}\\[0.10cm]
+{\fontsize{14}{18}\selectfont (Scientist/Engineer SE, MIS-1, MID-1, SIG, ICA)}\\[0.72cm]
+
+{\fontsize{17}{21}\selectfont Shri. Prashant D Bagalkot}\\[0.10cm]
+{\fontsize{14}{18}\selectfont (Division Head Scientist/Engineer SG, MID-1, SIG, ICA)}\\[0.85cm]
+
+% Logos from the main Overleaf project directory
+\noindent
+\begin{minipage}[c]{0.43\textwidth}
+\centering
+\includegraphics[width=0.78\linewidth]{ursc_logo.png}
 \end{minipage}
-\begin{minipage}{0.45\textwidth}
-\begin{flushright}
-\large
-\textbf{Guided by:}\\
-Shravan Kumar Thakur\\
-Prashant D Bagalkot
-\end{flushright}
+\hfill
+\begin{minipage}[c]{0.43\textwidth}
+\centering
+\includegraphics[width=0.64\linewidth]{isro_logo.png}
 \end{minipage}
 
-\vfill
-{\normalsize \today}
+\vspace{0.45cm}
+\rule{0.82\textwidth}{0.6pt}\\[0.35cm]
+
+{\Large Carried Out at,}\\[0.15cm]
+{\fontsize{16}{20}\selectfont U R Rao Satellite Centre (URSC), Bengaluru,}\\[0.08cm]
+{\fontsize{16}{20}\selectfont Indian Space Research Organisation (ISRO)}
+
 \end{titlepage}
 
 % ======================================================================
@@ -726,7 +736,7 @@ RS  & 20 & 20 & 1.9 \\
 \end{figure}
 
 \subsection{Constraint Verification: Border, Clearance, and Insert Holes}
-Figures corresponding to Slides 8, 12, and 14 of the project presentation visually confirm, in turn, that the border margin (20~mm on the baseline $200\times200$~mm panel), the same-face clearance/Connector-Face rule, and the 4/6~mm insert-hole proximity rule are each correctly enforced on the baseline assembly before progressing to the full production pipeline.
+Figures visually confirm, in turn, that the border margin (20~mm on the baseline $200\times200$~mm panel), the same-face clearance/Connector-Face rule, and the 4/6~mm insert-hole proximity rule are each correctly enforced on the baseline assembly before progressing to the full production pipeline.
 
 \begin{figure}[H]
 \centering
@@ -871,105 +881,144 @@ The Differential Evolution (DE) results are presented for both configurations so
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/DE/de_outputs/old_layout/layout_1_main.png}
-\caption{Main layout view -- old Layout1}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/DE/de_outputs/old_layout/layout_1_main.png}
+    \caption{Main layout view -- old Layout1}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/DE/de_outputs/old_layout/layout_1_distance_map.png}
-\caption{Distance mapping -- old Layout1}
+
+\vspace{0.5cm}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/DE/de_outputs/old_layout/layout_1_distance_map.png}
+    \caption{Distance mapping -- old Layout1}
 \end{subfigure}
+
 \caption{Differential Evolution output for the old layout (Layout1): main placement and corresponding insert-distance mapping.}
 \label{fig:de_old}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/DE/de_outputs/new_layout/layout_1_main.png}
-\caption{Main layout view -- new Layout2}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/DE/de_outputs/new_layout/layout_1_main.png}
+    \caption{Main layout view -- new Layout2}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/DE/de_outputs/new_layout/layout_1_distance_map.png}
-\caption{Distance mapping -- new Layout2}
+
+\vspace{0.3cm}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/DE/de_outputs/new_layout/layout_1_distance_map.png}
+    \caption{Distance mapping -- new Layout2}
 \end{subfigure}
+
 \caption{Differential Evolution output for the new layout (Layout2): main placement and corresponding insert-distance mapping.}
 \label{fig:de_new}
 \end{figure}
 
 \subsection{DE Performance Bottleneck Analysis}
 The DE configuration (600 iterations $\times$ 25 population, all CPU cores, deferred updating) reflects a deliberate trade-off: larger population sizes and iteration counts improve the probability of finding a fully compliant solution but increase wall-clock cost roughly linearly, while parallel-processing overhead across CPU workers can partially offset the benefit of using all available cores when the per-candidate evaluation function does not scale perfectly. The old and new layout results also represent different problem scales: Layout1 is the original, relatively compact test configuration, whereas Layout2 contains a substantially larger panel and a much larger component set. Consequently, the two results should be compared primarily as demonstrations of the pipeline operating on the two configurations rather than as a controlled timing experiment.
-
+\newpage
 \section{CMA-ES Results}
 CMA-ES was evaluated using the same two layout configurations and the same physical constraint model. \textbf{Figure~\ref{fig:cma_old}} shows a representative result for the old Layout1 configuration, while \textbf{Figure~\ref{fig:cma_new}} shows the corresponding result for the new Layout2 configuration. As with DE, each figure contains both the main placement view and the associated distance map so that component placement and insert-distance compliance can be inspected together.
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/CMA-ES/cma-es_output/old_layout/layout_1_main.png}
-\caption{Main layout view -- old Layout1}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/CMA-ES/cma-es_output/old_layout/layout_1_main.png}
+    \caption{Main layout view -- old Layout1}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/CMA-ES/cma-es_output/old_layout/layout_1_distance_map.png}
-\caption{Distance mapping -- old Layout1}
+
+\vspace{0.3cm}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/CMA-ES/cma-es_output/old_layout/layout_1_distance_map.png}
+    \caption{Distance mapping -- old Layout1}
 \end{subfigure}
+
 \caption{CMA-ES output for the old layout (Layout1): main placement and corresponding insert-distance mapping.}
 \label{fig:cma_old}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{CMA-ES/cma-es_output/new_layout/layout_1_main.png}
-\caption{Main layout view -- new Layout2}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{CMA-ES/cma-es_output/new_layout/layout_1_main.png}
+    \caption{Main layout view -- new Layout2}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{CMA-ES/cma-es_output/new_layout/layout_1_distance_map.png}
-\caption{Distance mapping -- new Layout2}
+
+\vspace{0.3cm}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{CMA-ES/cma-es_output/new_layout/layout_1_distance_map.png}
+    \caption{Distance mapping -- new Layout2}
 \end{subfigure}
+
 \caption{CMA-ES output for the new layout (Layout2): main placement and corresponding insert-distance mapping.}
 \label{fig:cma_new}
 \end{figure}
 
 Qualitatively, CMA-ES was observed during development to converge to a fully valid layout more reliably than plain DE on configurations where components were densely packed relative to the panel area, consistent with its adaptive covariance-matrix mechanism being specifically effective at escaping the local ``geometric deadlocks'' documented in Chapter~\ref{chap:challenges}. The Layout2 result demonstrates that the same CMA-ES pipeline can be applied to the newer configuration without changing the underlying optimization formulation.
-
+\newpage
 \section{PPO Results}
 The PPO results are likewise presented as an old-layout/new-layout pair. \textbf{Figure~\ref{fig:ppo_old}} represents the final inference output for the original Layout1 problem, while \textbf{Figure~\ref{fig:ppo_new}} represents the corresponding output for the newer Layout2 problem. Each result combines the main placement visualization with its see-through distance mapping, allowing the physical placement and insert-distance relationships to be inspected together. The PPO result tables previously included in this section have been removed as requested; the visual results are retained because they directly show the layouts produced by the trained policy and their geometric verification.
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{PPO/ppo_output/old_layout/layout_1_main.png}
-\caption{Main layout view -- old Layout1}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{PPO/ppo_output/old_layout/layout_1_main.png}
+    \caption{Main layout view -- old Layout1}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{PPO/ppo_output/old_layout/layout_1_distance_map.png}
-\caption{Distance mapping -- old Layout1}
+
+\vspace{0.3cm}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{PPO/ppo_output/old_layout/layout_1_distance_map.png}
+    \caption{Distance mapping -- old Layout1}
 \end{subfigure}
+
 \caption{PPO output for the old layout (Layout1): main placement and corresponding see-through insert-distance mapping.}
 \label{fig:ppo_old}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/PPO/ppo_output/new_layout/layout_1_main.png}
-\caption{Main layout view -- new Layout2}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/PPO/ppo_output/new_layout/layout_1_main.png}
+    \caption{Main layout view -- new Layout2}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.48\textwidth}
-\includegraphics[width=\textwidth]{report_making/PPO/ppo_output/new_layout/layout_1_distance_map.png}
-\caption{Distance mapping -- new Layout2}
+
+\vspace{0.3cm}
+
+\begin{subfigure}[b]{0.65\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{report_making/PPO/ppo_output/new_layout/layout_1_distance_map.png}
+    \caption{Distance mapping -- new Layout2}
 \end{subfigure}
+
 \caption{PPO output for the new layout (Layout2): main placement and corresponding see-through insert-distance mapping.}
 \label{fig:ppo_new}
 \end{figure}
-
+\caption{PPO output for the new layout (Layout2): main placement and corresponding see-through insert-distance mapping.}
+\label{fig:ppo_new}
+\end{figure}
+\newpage
 \section{Comparative Performance Analysis}
 \label{sec:comparative_results}
 This section presents the eight comparative results generated by the head-to-head study (Section~4.6). Each result is deliberately kept together with its explanation and figure on a single page so that the reader can interpret the plotted evidence without having to turn to a separate page for the associated discussion.
@@ -1138,10 +1187,9 @@ Several directions for extending this work were identified over the course of th
     \item \textbf{Thermal dissipation and hot-spot spacing.} Incorporating thermal dissipation models as spatial constraints to maintain minimum separation distances between high-power units (e.g., PDUs) and heat-sensitive components, thereby preventing the formation of thermal hot-spots.
     
     \item \textbf{Connector mating and harness bend radii.} Adding directional clearance envelopes in front of connector faces to account for cable routing, connector mating depth, and the minimum allowable wire-harness bend radii.
-    
-    \item \textbf{Thermal and structural co-optimization.} Incorporating thermal dissipation paths and structural load paths as additional objective/constraint terms alongside the current CoG-centric formulation.
-    
-    \item \textbf{Hybrid solvers.} Investigating a PPO-global-search-plus-CMA-ES-polish hybrid (considered but not selected during initial design, Table~\ref{tab:ppo_design}), which could combine PPO's amortized speed with CMA-ES's precise local refinement.
+
+    \item \textbf{Transition from 2D to 3D component modelling.} Extending the optimization framework from 2D footprints to 3D component representations, incorporating component height, volumetric clearances, mounting orientations, and spatial interactions between components to enable more realistic spacecraft configuration optimization.
+
 \end{itemize}
 % ======================================================================
 \chapter{Conclusion}

@@ -1,0 +1,120 @@
+{
+  "BOARD": {
+    "Object name": "BOARD",
+    "Length (mm)": 960.0,
+    "Breadth (mm)": 582.4,
+    "Weight (kg)": 2.0,
+    "Border (mm)": 20.0,
+    "Clearance (mm)": 20.0
+  },
+  "COMPONENTS": {
+    "FRONT": [
+      {
+        "Object name": "PDS",
+        "Length (mm)": 100.0,
+        "Breadth (mm)": 112.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [1,3],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "CCRR",
+        "Diameter (mm)": 45.0,
+        "Weight (kg)": 0.15,
+        "Insert (mm)": 6.0,
+        "Shape": "circle",
+        "Insert qty": 6,
+        "Object qty": 2,
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "LD",
+        "Diameter (mm)": 32.0,
+        "Weight (kg)": 0.04,
+        "Insert (mm)": 6.0,
+        "Shape": "circle",
+        "Insert qty": 3,
+        "Object qty": 6,
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "RS",
+        "Length (mm)": 110.0,
+        "Breadth (mm)": 90.5,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [1,3],
+        "CFLen (mm)": 65.0
+      }
+    ],
+    "BACK": [
+      {
+        "Object name": "BM1",
+        "Length (mm)": 100.0,
+        "Breadth (mm)": 100.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [1],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "PB",
+        "Length (mm)": 69.0,
+        "Breadth (mm)": 16.0,
+        "Weight (kg)": 0.1,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 2,
+        "Object qty": 4,
+        "CF": [1],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "RPU",
+        "Length (mm)": 260.0,
+        "Breadth (mm)": 253.0,
+        "Weight (kg)": 3.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [2,4],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "MES",
+        "Length (mm)": 128.0,
+        "Breadth (mm)": 117.0,
+        "Weight (kg)": 0.125,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [3,4],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "MT20",
+        "Length (mm)": 275.0,
+        "Breadth (mm)": 25.0,
+        "Weight (kg)": 0.4,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [1],
+        "CFLen (mm)": 65.0
+      }
+    ]
+  }
+}

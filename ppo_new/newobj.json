@@ -1,0 +1,463 @@
+{
+  "BOARD": {
+    "Object name": "BOARD",
+    "Length (mm)": 3285.0,
+    "Breadth (mm)": 1458.0,
+    "Border (mm)": 20.0,
+    "Clearance (mm)": 20.0
+  },
+  "COMPONENTS": {
+    "FRONT": [
+      {
+        "Object name": "Bat10",
+        "Length (mm)": 557.0,
+        "Breadth (mm)": 268.0,
+        "Weight (kg)": 37.5,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 24,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "Bat20",
+        "Length (mm)": 557.0,
+        "Breadth (mm)": 268.0,
+        "Weight (kg)": 37.5,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 24,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "IRU",
+        "Length (mm)": 366.0,
+        "Breadth (mm)": 268.0,
+        "Weight (kg)": 13.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "OBC10",
+        "Length (mm)": 362.0,
+        "Breadth (mm)": 252.0,
+        "Weight (kg)": 16.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 24,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "OBC20",
+        "Length (mm)": 362.0,
+        "Breadth (mm)": 252.0,
+        "Weight (kg)": 16.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 24,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "ICP",
+        "Length (mm)": 286.0,
+        "Breadth (mm)": 337.0,
+        "Weight (kg)": 14.9,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 20,
+        "Object qty": 1
+      },
+      {
+        "Object name": "SPDU",
+        "Length (mm)": 376.0,
+        "Breadth (mm)": 304.0,
+        "Weight (kg)": 9.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 10,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "FDM10",
+        "Length (mm)": 224.0,
+        "Breadth (mm)": 51.0,
+        "Weight (kg)": 3.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "FDM20",
+        "Length (mm)": 224.0,
+        "Breadth (mm)": 51.0,
+        "Weight (kg)": 3.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "IAPM1",
+        "Length (mm)": 250.0,
+        "Breadth (mm)": 250.0,
+        "Weight (kg)": 14.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "IAPM2",
+        "Length (mm)": 250.0,
+        "Breadth (mm)": 250.0,
+        "Weight (kg)": 14.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "IAPR1",
+        "Length (mm)": 250.0,
+        "Breadth (mm)": 250.0,
+        "Weight (kg)": 14.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "IAPR2",
+        "Length (mm)": 250.0,
+        "Breadth (mm)": 250.0,
+        "Weight (kg)": 14.0,
+        "Insert (mm)": 6.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "BMU51",
+        "Length (mm)": 106.0,
+        "Breadth (mm)": 97.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "BMU52",
+        "Length (mm)": 106.0,
+        "Breadth (mm)": 97.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "BMU53",
+        "Length (mm)": 106.0,
+        "Breadth (mm)": 97.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "BMU54",
+        "Length (mm)": 106.0,
+        "Breadth (mm)": 97.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          1
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "SSPA10",
+        "Length (mm)": 120.0,
+        "Breadth (mm)": 195.0,
+        "Weight (kg)": 3.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "SSPA20",
+        "Length (mm)": 120.0,
+        "Breadth (mm)": 195.0,
+        "Weight (kg)": 3.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "SSPA30",
+        "Length (mm)": 120.0,
+        "Breadth (mm)": 195.0,
+        "Weight (kg)": 3.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "SSPA40",
+        "Length (mm)": 120.0,
+        "Breadth (mm)": 195.0,
+        "Weight (kg)": 3.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 6,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "KABANDTRT10",
+        "Length (mm)": 180.0,
+        "Breadth (mm)": 220.0,
+        "Weight (kg)": 4.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          1,
+          4
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "KABANDTRT20",
+        "Length (mm)": 180.0,
+        "Breadth (mm)": 220.0,
+        "Weight (kg)": 4.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          1,
+          4
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "SAGS",
+        "Length (mm)": 120.0,
+        "Breadth (mm)": 90.0,
+        "Weight (kg)": 2.0,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "TRM10",
+        "Length (mm)": 182.0,
+        "Breadth (mm)": 75.0,
+        "Weight (kg)": 1.8,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "TRM20",
+        "Length (mm)": 182.0,
+        "Breadth (mm)": 75.0,
+        "Weight (kg)": 1.8,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "TRM30",
+        "Length (mm)": 182.0,
+        "Breadth (mm)": 75.0,
+        "Weight (kg)": 1.8,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "TRM40",
+        "Length (mm)": 182.0,
+        "Breadth (mm)": 75.0,
+        "Weight (kg)": 1.8,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "TRM50",
+        "Length (mm)": 182.0,
+        "Breadth (mm)": 75.0,
+        "Weight (kg)": 1.8,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "TRM60",
+        "Length (mm)": 182.0,
+        "Breadth (mm)": 75.0,
+        "Weight (kg)": 1.8,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [
+          0,
+          2
+        ],
+        "CFLen (mm)": 65.0
+      }
+    ]
+  }
+}

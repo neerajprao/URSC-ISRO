@@ -1,0 +1,1238 @@
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ================= PACKAGES =================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{pdflscape}
+
+% ================= GRAPHICS PATH =================
+% NOTE TO USER: Upload the "report_making" folder (containing DE, CMA-ES,
+% PPO, comparission, new_layout sub-folders with their images) into the
+% SAME Overleaf project as this .tex file, at the project root. The paths
+% below mirror the original folder structure of report_making.zip so the
+% figures resolve automatically. You do NOT need to move any images.
+\graphicspath{
+  {./}
+  {report_making/}
+  {report_making/DE/de_outputs/}
+  {report_making/CMA-ES/cma-es_output/}
+  {report_making/PPO/ppo_output/}
+  {report_making/comparission/comparission_output/}
+      }
+
+% ================= LISTINGS STYLE =================
+\definecolor{codebg}{rgb}{0.96,0.96,0.96}
+\definecolor{codegreen}{rgb}{0,0.5,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\lstdefinestyle{pystyle}{
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  frame=single,
+  language=Python
+}
+\lstset{style=pystyle}
+
+\lstdefinelanguage{json}{
+  basicstyle=\ttfamily\footnotesize,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{codebg},
+  literate=
+     *{0}{{{\color{codepurple}0}}}{1}
+      {1}{{{\color{codepurple}1}}}{1}
+      {2}{{{\color{codepurple}2}}}{1}
+      {3}{{{\color{codepurple}3}}}{1}
+      {4}{{{\color{codepurple}4}}}{1}
+      {5}{{{\color{codepurple}5}}}{1}
+      {6}{{{\color{codepurple}6}}}{1}
+      {7}{{{\color{codepurple}7}}}{1}
+      {8}{{{\color{codepurple}8}}}{1}
+      {9}{{{\color{codepurple}9}}}{1}
+      {:}{{{\color{blue}{:}}}}{1}
+      {,}{{{\color{blue}{,}}}}{1}
+      {\{}{{{\color{codegreen}{\{}}}}{1}
+      {\}}{{{\color{codegreen}{\}}}}}{1}
+      {[}{{{\color{codegreen}{[}}}}{1}
+      {]}{{{\color{codegreen}{]}}}}{1},
+}
+
+% ================= HEADER/FOOTER =================
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{14pt}
+\fancyhead[L]{\slshape \leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ================= TITLE FORMAT =================
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{40pt}
+
+\onehalfspacing
+
+\begin{document}
+
+% ======================================================================
+% TITLE PAGE
+% ======================================================================
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+
+{\large \bfseries U R Rao Satellite Centre (URSC)}\\[2pt]
+{\large Indian Space Research Organisation (ISRO)}\\[6pt]
+{\normalsize Mechanical Integration Division -- 1, Systems Integration Group}\\[1.5cm]
+
+\rule{\linewidth}{0.5pt}\\[0.6cm]
+{\Huge \bfseries Optimization of Spacecraft \\[2pt] Configuration}\\[0.5cm]
+{\Large Automated Dual-Sided Component Placement using \\ Differential Evolution, CMA-ES and Deep Reinforcement Learning (PPO)}\\[0.6cm]
+\rule{\linewidth}{0.5pt}\\[1.5cm]
+
+{\large \bfseries Internship Project Report}\\[0.3cm]
+{\normalsize Submitted in partial fulfilment of the requirements of the ISRO-URSC Internship Programme}\\[2cm]
+
+\begin{minipage}{0.45\textwidth}
+\begin{flushleft}
+\large
+\textbf{Submitted by:}\\
+Neeraj P Rao\\
+B.Tech (Hons.) Computer Science and Engineering\\
+RV University, Bengaluru
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.45\textwidth}
+\begin{flushright}
+\large
+\textbf{Guided by:}\\
+Shravan Kumar Thakur\\
+Prashant D Bagalkot
+\end{flushright}
+\end{minipage}
+
+\vfill
+{\normalsize \today}
+\end{titlepage}
+
+% ======================================================================
+% CERTIFICATE / DECLARATION
+% ======================================================================
+\chapter*{Certificate}
+\addcontentsline{toc}{chapter}{Certificate}
+This is to certify that the project report entitled \textbf{``Optimization of Spacecraft Configuration"} is a bonafide record of the internship work carried out by Neeraj P Rao, a student of RV University, Bengaluru.
+
+The project was successfully executed at the Mechanical Integration Division – 1 (MID-1), Systems Integration Group (SIG), located at the U R Rao Satellite Centre (URSC), Indian Space Research Organisation (ISRO), Bengaluru, under the esteemed guidance and supervision of Mr. Shravan Kumar Thakur and Mr. Prashant D Bagalkot.
+To the best of our knowledge, the work presented in this report is original and has not been submitted elsewhere for the award of any degree, diploma, or title.
+
+\vspace{2cm}
+\noindent
+\begin{minipage}{0.45\textwidth}
+Guide 1: Shravan Kumar Thakur
+\end{minipage}
+\begin{minipage}{0.45\textwidth}
+Guide 2: Prashant D Bagalkot
+\end{minipage}
+
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+I would like to express my sincere gratitude to the U R Rao Satellite Centre (URSC), Indian Space Research Organisation (ISRO), especially the System Integration Department, for providing me with the opportunity to undertake this Project work in a highly professional and technically enriching environment. This experience has greatly contributed to my academic learning and practical understanding of Mechanical engineering and system integration.\\
+\\
+
+I would like to express my respectful gratitude to Shri. SHREE NIWAS SAHU Sir, Group Director (SIG-System Integration Group, ICA-Integration Checkout Area), for his leadership and support during this Project Internship.\\
+\\
+I also like to express my gratitude toward Shri. PRASHANT D BAGALKOT sir, Division Head (MID-1, SIG, ICA), Shri. SHRAVAN KUMAR THAKUR sir, (MIS-1, MID-1, SIG, ICA) for his Guidance and Support throughout my project trainee period.\\
+\\
+Special thanks to TEJAS G and GOURAV S HAZARE, for his cooperation, support, and helpful nature during the Project Internship period.\\
+\\
+Finally, I thank all the engineers, staff members, and colleagues at URSC, ISRO who directly or indirectly contributed to my learning experience.\\
+\\
+I remain truly grateful for this opportunity, which has provided me with valuable technical exposure and practical experience.
+
+
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Manual placement of electronic and mechanical components on a spacecraft mounting panel is a slow, error-prone process that frequently results in an offset Centre of Gravity (CoG), which in turn creates attitude-control instabilities during flight. This project develops and compares three independent computational approaches to automate the placement of two-dimensional components across the front and back faces of a panel such that the combined assembly CoG lies as close as possible to the panel origin, while satisfying a hierarchy of hard physical constraints: zero overlap between component bodies (with direction-dependent clearance and special ``Connector Face'' clearances), containment within a border margin, and minimum pin-to-pin separation between structural insert holes (4~mm and 6~mm diameter, requiring 24--36~mm separation depending on the pairing). The three solvers implemented are Differential Evolution (DE), Covariance Matrix Adaptation Evolution Strategy (CMA-ES), and Proximal Policy Optimization (PPO), a deep reinforcement-learning algorithm. All three were accelerated using Numba JIT compilation for the constraint-evaluation core and were engineered to output five distinct, fully compliant candidate layouts per run so that design engineers can select the alternative best suited to downstream requirements. A dedicated comparative study evaluates the three solvers on wall-clock computational cost, convergence speed, scalability with respect to the number of components, statistical significance of performance differences, solution diversity, multi-board amortized generation speed, and constraint-violation composition. The results show that while DE and CMA-ES are simple to configure and reliably constraint-compliant, they must re-solve the optimization problem from scratch for every new board, whereas a trained PPO policy amortizes its training cost and generates new, fully valid layouts in a fraction of a second through direct neural-network inference. The report also documents the full engineering pipeline -- from the original guide-provided DE prototype, through progressively richer constraint modelling (border, clearance, insert holes), to the final multi-algorithm, front/back-aware placement system -- and applies the completed pipeline to a new, previously unseen panel layout supplied by the project guide.
+\newpage
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ======================================================================
+\chapter{Introduction}
+% ======================================================================
+
+
+\section{Overview of Indian Space Research Organisation (ISRO) \& U R Rao Satellite Centre (URSC)}
+
+Established in 1969 and headquartered in Bengaluru, ISRO is India’s national space agency, mandated to develop indigenous space technology for national development and scientific exploration. Operating through the PSLV and GSLV launch vehicles, ISRO deploys the GSAT, IRS, and NavIC satellite constellations for communication, Earth observation, navigation, and disaster management. Flagship missions such as Chandrayaan-1 and the Mars Orbiter Mission validated its technical capabilities, while a growing commercial launch portfolio and strategic focus on Gaganyaan, reusable launch vehicles, small launchers, deep-space missions, and international partnerships position India as a self-reliant spacefaring nation.
+
+\begin{figure}[H]
+\centering
+\IfFileExists{URSC.png}{%
+  \includegraphics[width=0.9\textwidth]{URSC.png}%
+}{%
+  \fbox{\parbox[c][0.28\textheight][c]{0.9\textwidth}{\centering
+  \textit{Insert the U R Rao Satellite Centre image here.}\\[4pt]
+  Save the image as \texttt{URSC.png} in the Overleaf project folder.}}%
+}
+\caption{U R Rao Satellite Centre, Bengaluru, Karnataka}
+\label{fig:ursc}
+\end{figure}
+
+The U R Rao Satellite Centre (URSC) in Bengaluru is ISRO’s primary hub for the end-to-end design, integration, and qualification of satellites. URSC executes the complete development lifecycle—from conceptual design and structural-thermal analysis to payload integration and environmental testing in thermal-vacuum, vibration, and acoustic facilities. The centre delivers flight-ready platforms across communication, Earth observation, navigation, and scientific domains, with core expertise in power systems, attitude and orbit control, and advanced communication payloads. URSC remains the operational backbone for ISRO’s next-generation missions, including human spaceflight, deep-space exploration, and high-throughput satellite constellations.
+
+\section{Background}
+Spacecraft subsystems are built up from printed circuit boards (PCBs) and mechanical panels onto which dozens of discrete components -- power distribution units, sensors, connectors, radiating plates, mounting brackets, and structural inserts -- must be rigidly fixed. Because a spacecraft is a free body in orbit, any imbalance in how mass is distributed across its structure translates directly into a Centre of Gravity (CoG) offset from the intended geometric centre. During launch and orbital manoeuvres, a CoG offset produces unwanted torques that the Attitude and Orbit Control System (AOCS) must continuously correct for, consuming propellant and, in extreme cases, threatening mission stability. Component placement is therefore not a purely aesthetic or space-utilisation problem; it is a mass-balance engineering problem with direct consequences for spacecraft dynamics.
+
+Historically, this placement task has been carried out manually by mechanical design engineers using CAD tools, iterating by trial and error until an acceptable CoG offset and a collision-free, manufacturable layout are reached. This process does not scale well: as the number of components grows, or as new board geometries are introduced, the manual search space grows combinatorially, and engineers have no systematic way of exploring multiple good alternatives beyond the first one they happen to find.
+
+This project, carried out at the Mechanical Integration Division -- 1 of the Systems Integration Group, U R Rao Satellite Centre (ISRO), automates this placement task using numerical and machine-learning-based optimization. The work began from a simple Differential-Evolution-based prototype supplied by the project guide and was progressively extended -- first by adding a rigorous constraint model (board border, inter-component clearance, connector-face clearance, and insert-hole proximity rules), then by generalising to dual-sided (front and back) panels, and finally by implementing and comparing three qualitatively different optimization paradigms: Differential Evolution, CMA-ES, and Proximal Policy Optimization.
+\pagebreak
+\section{Problem Statement}
+Given a rectangular mounting panel of specified width and height, and a set of components -- each defined by its planar footprint (rectangular or circular), mass, insert-hole configuration, and the panel face (front or back) it must be mounted on -- determine the $(x, y)$ coordinates of every component such that:
+\begin{enumerate}[label=(\roman*)]
+    \item The combined mass-weighted Centre of Gravity of the full assembly lies within a small tolerance of the panel's geometric origin $(0, 0)$;
+    \item No two components placed on the same face overlap, taking into account a minimum clearance envelope (which may be direction-dependent through a ``Connector Face'' override);
+    \item Every component, including its clearance envelope, remains within the usable panel area after subtracting a fixed border margin;
+    \item Every structural insert hole maintains the minimum required separation (24~mm, 30~mm, or 36~mm, depending on whether the paired inserts are 4~mm, mixed, or 6~mm in diameter) from every insert hole belonging to a different component, on both faces simultaneously since inserts pass through the full panel thickness;
+    \item Five distinct, fully compliant layouts are produced per run so that a design engineer has multiple valid alternatives to choose from.
+\end{enumerate}
+
+\section{Objectives}
+The project set out to achieve the following objectives:
+\begin{itemize}
+    \item Develop a parallelised optimization tool that automates $(x, y)$ component placement without manual iteration.
+    \item Restrict the combined assembly CoG offset to as minimum as possible of the panel origin.
+    \item Fully enforce all geometric and structural constraints: zero collisions between component bodies and clearance envelopes, panel border containment, and insert-to-insert minimum separation.
+    \item Implement and benchmark multiple optimization paradigms -- Differential Evolution, CMA-ES, and PPO -- accelerated using Numba JIT compilation.
+    \item Generate five distinct, fully compliant layout alternatives per optimization run.
+    \item Quantitatively compare the three algorithms along axes relevant to a production engineering workflow: computational cost, convergence behaviour, scalability, statistical robustness, solution diversity, and amortized multi-board generation speed.
+\end{itemize}
+
+\section{Scope and Constraints Overview}
+The scope of the project is restricted to planar (two-dimensional) component placement; component orientation/rotation, thermal considerations, and out-of-plane structural stresses are outside the scope of this work. Four categories of engineering constraint drive the optimization, summarised in Table~\ref{tab:constraint_summary} and elaborated fully in Chapter~\ref{chap:formulation}.
+
+\begin{table}[H]
+\centering
+\caption{Summary of engineering constraints modelled in the placement problem}
+\label{tab:constraint_summary}
+\begin{tabular}{|p{3.2cm}|p{9.5cm}|}
+\hline
+\textbf{Constraint} & \textbf{Description} \\
+\hline
+Mass \& Balance & Combined assembly CoG must lie within tolerance of the panel origin $(0,0)$. \\ \hline
+Dual-sided packing & Components are placed independently on FRONT and BACK panel faces; same-face components must not collide. \\ \hline
+Keepout / clearance & Zero-overlap rule for component bodies plus a configurable clearance envelope, including a directional Connector-Face (CF) override. \\ \hline
+Insert proximity & Insert holes (4.0~mm / 6.0~mm diameter) require 24--36~mm minimum pairwise separation depending on diameter combination, enforced across both faces. \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Organization of the Report}
+Chapter~\ref{chap:lit} surveys the algorithmic and domain literature underpinning the three solvers. Chapter~\ref{chap:formulation} formalises the placement problem mathematically, including the CoG definition and every constraint. Chapter~\ref{chap:methodology} details the engineering methodology and the evolution of the pipeline from the original DE prototype through to the final multi-algorithm system. Chapter~\ref{chap:implementation} describes implementation aspects: the JSON-driven configuration schema, the Numba-accelerated fitness core, and the visualization pipeline. Chapter~\ref{chap:results} presents and discusses results for all three algorithms individually, the head-to-head comparative study, and a case study applying the completed pipeline to a new panel layout. Chapter~\ref{chap:challenges} documents the engineering challenges encountered and how they were resolved. Chapters~\ref{chap:future} and~\ref{chap:conclusion} present future scope and concluding remarks, followed by references and appendices containing selected code listings.
+
+% ======================================================================
+\chapter{Literature Review}
+\label{chap:lit}
+% ======================================================================
+
+\section{Automated Component and PCB Placement}
+Automated placement of components on a substrate is a well-studied combinatorial optimization problem in the electronic design automation (EDA) community. Classical approaches such as the TimberWolf placement and routing package \cite{sechen1985timberwolf} used simulated-annealing-style stochastic search to place standard-cell circuits, establishing the template that later metaheuristic placement tools would follow: represent a layout as a vector of coordinates, define a scalar cost (penalty) function encoding all design constraints, and search the coordinate space to minimise that cost. More recently, machine-learning-driven placement has entered mainstream chip design; Mirhoseini et al.\ \cite{mirhoseini2021graph} demonstrated a graph-placement methodology using deep reinforcement learning that produced chip floorplans competitive with, and in some metrics superior to, those produced by human engineers, in a fraction of the time. This project draws directly on both traditions: the metaheuristic (DE, CMA-ES) side follows the classical penalty-function search paradigm, while the PPO solver follows the RL-driven placement paradigm popularised by Mirhoseini et al.
+
+\section{Differential Evolution}
+Differential Evolution (DE), introduced by Storn and Price \cite{storn1997de}, is a population-based, gradient-free global optimizer for continuous search spaces. At every generation, DE creates a trial vector for each population member by adding the weighted difference of two randomly selected population vectors to a third, then applies crossover with the current member and greedily accepts the trial if it improves the objective. DE is attractive for this project because it requires no gradient information (the placement penalty function is highly discontinuous due to hard overlap/border indicator terms), is embarrassingly parallel across the population, and has very few tunable hyperparameters (population size, mutation/crossover behaviour, and the maximum number of generations).
+
+\section{Covariance Matrix Adaptation Evolution Strategy (CMA-ES)}
+CMA-ES \cite{hansen2016cma} is a state-of-the-art evolution strategy for difficult, non-convex, non-separable continuous optimization problems. Unlike DE, CMA-ES explicitly maintains and adapts a full covariance matrix describing the search distribution, allowing the algorithm to learn correlations between decision variables (e.g. that moving one component's $x$ and $y$ coordinates together is more productive than moving them independently) and to dynamically rescale its step size. This adaptive behaviour makes CMA-ES particularly effective at escaping the local minima and narrow ``geometric deadlocks'' that a simpler evolutionary strategy such as DE can become trapped in when components are close to a valid configuration but cannot move without transiently increasing the overlap penalty.
+
+\section{Reinforcement Learning and Proximal Policy Optimization}
+Reinforcement learning (RL) frames a task as a Markov Decision Process (MDP) in which an agent iteratively observes a state, takes an action, and receives a reward, with the goal of learning a policy that maximises cumulative reward \cite{sutton2018rl}. Proximal Policy Optimization (PPO) \cite{schulman2017ppo}, introduced by Schulman et al.\ at OpenAI, is a model-free, on-policy, Actor-Critic policy-gradient algorithm that constrains each policy update using a clipped surrogate objective, preventing destructively large parameter updates while retaining much of the sample efficiency of more complex trust-region methods. PPO is widely regarded as an industry-standard baseline for continuous-control RL problems due to its favourable balance of implementation simplicity, training stability, and performance, which motivated its selection as the RL solver for this project. Critically, unlike DE and CMA-ES, a trained PPO policy is a reusable artefact: once trained, it can generate new valid layouts for previously unseen problem instances via a single forward pass, at a fraction of the wall-clock cost of re-running an evolutionary search from scratch.
+
+\section{High-Performance Computing Support}
+All three solvers rely on Numba \cite{lam2015numba}, a just-in-time (JIT) compiler that translates a subset of Python and NumPy code directly into optimized machine code at first call, giving compiled-language performance for the innermost constraint-evaluation loops (pairwise overlap tests, insert-distance tests, and CoG computation) while retaining Python's development ergonomics for the surrounding orchestration code. The PPO solver additionally relies on Stable-Baselines3 \cite{raffin2021sb3}, a widely used, well-tested library of RL algorithm implementations built on PyTorch, and on the Gymnasium environment API for defining the placement MDP.
+
+\section{Summary}
+The literature establishes three complementary families of solution technique for the placement problem at hand: classical stochastic metaheuristics with minimal assumptions (DE), adaptive metaheuristics that learn problem structure within a single run (CMA-ES), and amortized, learning-based inference (PPO). This project is a novel application of all three techniques, side by side, to the specific problem of dual-sided spacecraft panel component placement under simultaneous CoG, clearance, and insert-hole proximity constraints.
+
+% ======================================================================
+\chapter{Problem Formulation}
+\label{chap:formulation}
+% ======================================================================
+
+\section{Centre of Gravity}
+The Centre of Gravity (CoG) of a system of objects is the point at which the entire weight of the system may be considered to act. For a set of $N$ point masses $m_i$ located at planar positions $(x_i, y_i)$, the CoG is
+\begin{equation}
+\bar{x} = \frac{\sum_{i=1}^{N} m_i x_i}{\sum_{i=1}^{N} m_i}, \qquad
+\bar{y} = \frac{\sum_{i=1}^{N} m_i y_i}{\sum_{i=1}^{N} m_i}.
+\label{eq:cog}
+\end{equation}
+For a dual-sided panel, front-side and back-side components both contribute to a single, shared CoG. Since the back face is viewed as a mirror image of the front face along the panel's local $x$-axis, the $x$-coordinate of every back-side component is negated before being substituted into Equation~\ref{eq:cog}, so that a component near the panel edge on the back face contributes correctly to the assembly's true CoG in the panel's physical reference frame. The $y$-coordinate and the overall two-dimensional balance point are unaffected by which face a component sits on. The design goal is
+\begin{equation}
+\sqrt{\bar{x}^2 + \bar{y}^2} \le \text{CG\_TOLERANCE}, \qquad \text{CG\_TOLERANCE} = 1.0~\text{mm}.
+\end{equation}
+
+\section{Design Variables}
+For an assembly of $N$ components, the optimization vector $\mathbf{v} \in \mathbb{R}^{2N}$ consists of the interleaved planar coordinates
+\begin{equation}
+\mathbf{v} = (x_1, y_1, x_2, y_2, \dots, x_N, y_N),
+\end{equation}
+with each $(x_i, y_i)$ representing the centre position of component $i$ within its assigned panel face. Each component additionally carries static (non-optimized) attributes read from the JSON configuration file: object name, shape (rectangle or circle), length/breadth or diameter, mass, insert diameter, insert quantity, an optional Connector-Face (CF) override, and the face (FRONT/BACK) it is mounted on.
+
+\section{Constraint 1: Border Containment}
+The panel defines a usable placement region obtained by insetting the full panel rectangle by a fixed \texttt{Border (mm)} margin on all four sides. Every component's full footprint -- including its clearance envelope -- must lie entirely within this inset region. In the original guided prototype, the panel width, height, and a 5-component test assembly were entered interactively (see Section~\ref{sec:previous_work}); in the automated pipeline this is read directly from the JSON configuration, e.g. a 20~mm border margin on a $200 \times 200$~mm test panel.
+
+\section{Constraint 2: Clearance Space and Connector-Face Override}
+No two components mounted on the same panel face may overlap, and in addition a minimum clearance distance must separate their bodies. This clearance is direction-dependent: a component may declare a \texttt{CF} (Connector Face) list identifying which of its four sides face a wiring/connector interface, together with a \texttt{CFLen (mm)} value specifying a larger, connector-specific clearance to apply on that side (e.g. 65~mm in several test configurations), while ordinary clearance on the remaining sides uses the smaller board-level \texttt{Clearance (mm)} value. Clearance envelopes are permitted to overlap the border margin, but never another component's body.
+
+The overlap penalty itself is computed axis-aligned using an interval-intersection formulation. For two components with bounding intervals $[a_1, a_2]$ and $[b_1, b_2]$ along one axis,
+\begin{equation}
+\text{overlap} = \max\big(0,\ \min(a_2, b_2) - \max(a_1, b_1)\big).
+\end{equation}
+The worked numerical example used to validate this logic during development is:
+\begin{align}
+\text{Overlap}_x &= \max(0, \min(2,3) - \max(0,1)) = \max(0, 2-1) = 1 \\
+\text{Overlap}_y &= \max(0, \min(2,3) - \max(0,1)) = \max(0, 2-1) = 1 \\
+\text{Overlap area} &= 1 \times 1 = 1 \\
+\text{Overlap penalty} &= 1 \times 100 = 100
+\end{align}
+i.e. the overlap area is multiplied by a large penalty weight (100 in this example) so that even a small residual overlap dominates the scalar objective and is aggressively driven to zero by the optimizer.
+
+\section{Constraint 3: Insert Hole Proximity}
+Each component may carry one or more structural insert holes, each either 4.0~mm or 6.0~mm in diameter, used to physically bolt the component to the panel. Because inserts belonging to different components can be placed arbitrarily close together in $(x,y)$ even when the component bodies themselves satisfy clearance, a separate minimum-distance rule governs insert pairs, summarised in Table~\ref{tab:insert_rule}.
+
+\begin{table}[H]
+\centering
+\caption{Minimum required insert-to-insert separation by diameter pairing}
+\label{tab:insert_rule}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Insert A (mm)} & \textbf{Insert B (mm)} & \textbf{Minimum separation (mm)} \\
+\hline
+4.0 & 4.0 & 24.0 \\ \hline
+4.0 & 6.0 & 30.0 \\ \hline
+6.0 & 6.0 & 36.0 \\
+\hline
+\end{tabular}
+\end{table}
+
+Because insert holes are physical through-holes that pass entirely through the panel thickness, this rule is enforced simultaneously across both the FRONT and BACK faces -- an insert belonging to a front-side component and an insert belonging to a back-side component are still required to respect the minimum separation table above, even though the two components' bodies themselves are on opposite faces and therefore never collide.
+
+\section{Front versus Back Placement}
+A component's assigned face changes only its position along the panel's local depth (Z) axis; its $(x, y)$ position is optimized identically regardless of face. The practical consequences, established early in the project and enforced throughout every solver, are:
+\begin{itemize}
+    \item \textbf{Component clearance:} clearance/overlap rules apply only between components sharing the same face, since front and back components physically cannot collide.
+    \item \textbf{Insert holes:} insert-to-insert distance rules apply across both faces simultaneously (Section~\ref{sec:previous_work} and above), since inserts are through-holes.
+    \item \textbf{Centre of Gravity:} the CoG calculation is face-agnostic in the sense that every component's mass contributes to one shared 2D balance point, but a back-side component's $x$-coordinate must first be mirrored (negated) to express it in the panel's single physical reference frame, as described in Section~3.1.
+\end{itemize}
+
+\section{JSON Configuration Schema}
+\label{sec:json_schema}
+To avoid re-entering dozens of component specifications by hand for every experiment, the project's configuration is captured in a JSON file (e.g.\ \texttt{layout1.json}, \texttt{layout2.json}) with the schema illustrated in Listing~\ref{lst:json_schema}, derived directly from the working configuration files used throughout the project.
+
+\begin{lstlisting}[language=json, caption={Excerpt of the JSON board/component configuration schema (from \texttt{DE/layout1.json})}, label={lst:json_schema}]
+{
+  "BOARD": {
+    "Object name": "BOARD",
+    "Length (mm)": 960.0,
+    "Breadth (mm)": 582.4,
+    "Weight (kg)": 2.0,
+    "Border (mm)": 20.0,
+    "Clearance (mm)": 20.0
+  },
+  "COMPONENTS": {
+    "FRONT": [
+      {
+        "Object name": "PDS",
+        "Length (mm)": 100.0,
+        "Breadth (mm)": 112.0,
+        "Weight (kg)": 1.5,
+        "Insert (mm)": 4.0,
+        "Shape": "rectangle",
+        "Insert qty": 4,
+        "Object qty": 1,
+        "CF": [1, 3],
+        "CFLen (mm)": 65.0
+      },
+      {
+        "Object name": "CCRR",
+        "Diameter (mm)": 45.0,
+        "Weight (kg)": 0.15,
+        "Insert (mm)": 6.0,
+        "Shape": "circle",
+        "Insert qty": 6,
+        "Object qty": 2,
+        "CFLen (mm)": 65.0
+      }
+    ],
+    "BACK": [
+      { "Object name": "BM1", "...": "..." }
+    ]
+  }
+}
+\end{lstlisting}
+
+Each component entry declares its own geometry (rectangular \texttt{Length}/\texttt{Breadth} or circular \texttt{Diameter}), \texttt{Weight}, insert configuration (\texttt{Insert (mm)} diameter and \texttt{Insert qty}), an optional \texttt{Object qty} for repeated instances of the same physical part (expanded internally into individually indexed components, e.g.\ \texttt{CCRR0}, \texttt{CCRR1}), and an optional directional \texttt{CF}/\texttt{CFLen} override for connector-face clearance. This schema is shared, unmodified, by all three solvers (DE, CMA-ES, PPO), which is what allows their outputs to be compared on a like-for-like basis in Chapter~\ref{chap:results}.
+
+\section{Objective / Penalty Function Formulation}
+All three solvers reduce the multi-constraint placement problem to the minimisation of a single, non-negative scalar penalty function $J(\mathbf{v})$ evaluated on a candidate coordinate vector $\mathbf{v}$:
+\begin{equation}
+J(\mathbf{v}) = w_b \cdot P_{\text{border}}(\mathbf{v}) + w_o \cdot P_{\text{overlap}}(\mathbf{v}) + w_i \cdot P_{\text{insert}}(\mathbf{v}) + w_c \cdot P_{\text{cg}}(\mathbf{v}),
+\label{eq:penalty}
+\end{equation}
+where $P_{\text{border}}$ accumulates the squared out-of-bounds distance for any component that violates the border-inset region, $P_{\text{overlap}}$ accumulates pairwise overlap area (Section 3.3) across all same-face component pairs, $P_{\text{insert}}$ accumulates the squared shortfall below the required minimum separation for every insert pair violating Table~\ref{tab:insert_rule}, and $P_{\text{cg}}$ penalises the squared CoG offset from the origin. A layout is considered \emph{fully valid} only when $P_{\text{border}} = P_{\text{overlap}} = P_{\text{insert}} = 0$ exactly (the three ``hard'' priority-1 constraints), with $P_{\text{cg}}$ minimised as the ``soft'' priority-2 objective once the hard constraints are satisfied. This priority ordering -- hard geometric/structural feasibility strictly before CoG optimality -- was a deliberate design decision (see Section~\ref{sec:reward_design}) and is enforced identically, in principle, across DE, CMA-ES, and PPO, though each solver implements the weighting and reward shaping slightly differently, as detailed in Chapter~\ref{chap:methodology}.
+
+% ======================================================================
+\chapter{System Design and Methodology}
+\label{chap:methodology}
+% ======================================================================
+
+\section{Project Timeline and Overall Workflow}
+The project progressed through six well-defined stages, illustrated in Figure~\ref{fig:timeline} and summarised in Table~\ref{tab:timeline}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{report_making/figures/project_timeline.png}
+\caption{Project timeline and workflow, from the guide-supplied DE prototype through to the final multi-algorithm comparative study.}
+\label{fig:timeline}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Stage-by-stage project timeline}
+\label{tab:timeline}
+\begin{tabular}{|p{2.6cm}|p{10.1cm}|}
+\hline
+\textbf{Stage} & \textbf{Description} \\
+\hline
+Phase 1 & Guide-supplied single-sided DE prototype, iteratively extended with border, clearance, and insert-hole constraints; JSON-driven configuration introduced. \\ \hline
+DE pipeline & Full production pipeline (\texttt{de.py}) supporting circular components and dual-sided (front/back) placement, with visualization. \\ \hline
+CMA-ES pipeline & Second solver (\texttt{cma-es-local.py}) targeting faster convergence than DE on the same constraint model. \\ \hline
+PPO pipeline & Reinforcement-learning solver trained to amortize placement cost across many boards via a trained policy. \\ \hline
+Comparative study & Head-to-head benchmarking of DE, CMA-ES, and PPO across computational cost, convergence, scalability, and other axes. \\ \hline
+New layout case study & Application of the completed, validated pipeline to a new panel specification (\texttt{layout2.json}) supplied by the project guide. \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Previous Work: Guided DE Prototype}
+\label{sec:previous_work}
+The project began from a Jupyter notebook, \texttt{CG\_Optimization.ipynb}, whose first cell was supplied directly by the project guide. That cell implements a simple DE-based solver that reads panel dimensions and a small number of components interactively from the console (panel width/height, and per-component name, length, width, and mass) and arranges the components so that the assembly CoG is at the origin, without any collision, border, or insert-hole modelling.
+
+
+Building on this starting point, three further cells were developed independently, each incrementally adding one constraint layer while retaining full backward compatibility with the CoG objective of the first cell:
+\begin{enumerate}
+    \item \textbf{Border implementation:} a configurable border margin (e.g.\ 20~mm) is subtracted from the usable panel  from all sides, and every component footprint is constrained to remain within the inset region.
+    \item \textbf{Clearance space:} a configurable minimum clearance distance is added between components on top of the zero-overlap rule; clearance envelopes are permitted to overlap the border but never another component.
+    \item \textbf{Insert holes:} the 4~mm/6~mm insert-hole proximity rule (Table~\ref{tab:insert_rule}) is layered on top of the previous two constraints.
+\end{enumerate}
+Because manually re-entering component data interactively for every experiment was prohibitively tedious, this data-entry step was replaced with a JSON configuration file (originally \texttt{layout1.json}), and a second notebook, \texttt{CG\_Optimization\_using\_json.ipynb}, was written to parse this file directly and run the full four-constraint DE solver end to end, producing five diverse layouts per configuration ``for diversity, so that engineers can choose which works best for them.'' This established the JSON-driven, five-layouts-per-run convention that all subsequent solvers (DE production pipeline, CMA-ES, PPO) inherited.
+
+\section{Differential Evolution Pipeline}
+\label{sec:de_pipeline}
+The production DE pipeline (\texttt{DE/de.py}) generalises the previous-work prototype to circular components (in addition to rectangular ones) and to true dual-sided (front + back) placement with a combined visualization showing both faces. The constraint-evaluation core is compiled with Numba's \texttt{@njit(fastmath=True, cache=True)} decorator (Listing~\ref{lst:numba_core}) so that the CoG, overlap, border, and insert-distance checks -- which must be evaluated once per candidate solution, for every member of the DE population, at every generation -- run at native machine-code speed rather than interpreted Python speed.
+
+\begin{lstlisting}[caption={Numba-accelerated fitness core (excerpt from \texttt{DE/de.py})}, label={lst:numba_core}]
+CG_TOLERANCE = 1.0  # mm: allowed combined CoG offset from origin
+
+@njit(fastmath=True, cache=True)
+def compute_fitness_core(cx, cy, masses, hl, hw, clearance,
+                          req_d_matrix, num_components,
+                          flat_offsets, offset_counts, offset_indices,
+                          is_back_side, clearance_dirs,
+                          panel_width, panel_height, border_spacing):
+    total_mass = 0.0
+    cg_x = 0.0
+    cg_y = 0.0
+    abs_x = np.zeros(num_components)
+    for i in range(num_components):
+        m = masses[i]
+        total_mass += m
+        if is_back_side[i]:
+            abs_x[i] = -cx[i]      # mirror BACK-side x for shared CoG
+        else:
+            abs_x[i] = cx[i]
+        cg_x += abs_x[i] * m
+        cg_y += cy[i] * m
+    if total_mass == 0.0:
+        return 1e15                 # reject degenerate solutions
+    cg_x /= total_mass
+    cg_y /= total_mass
+    # ... border, overlap, and insert-distance penalty accumulation ...
+\end{lstlisting}
+
+The DE search itself is invoked through SciPy's \texttt{differential\_evolution} routine using the \texttt{best1bin} strategy, deferred (batched) updating, and full CPU parallelism across the population, as shown in Listing~\ref{lst:de_call}.
+
+\begin{lstlisting}[caption={DE solver invocation (excerpt from \texttt{DE/de.py})}, label={lst:de_call}]
+result = differential_evolution(
+    evaluate, bounds,
+    args=(masses, lengths, widths, clearance, req_d_matrix,
+          flat_offsets, offset_counts, offset_indices,
+          is_back_side, clearance_dirs,
+          panel_width, panel_height, border_spacing),
+    maxiter=600, popsize=25, tol=1e-6,
+    strategy='best1bin', seed=seed,
+    workers=-1, updating='deferred'
+)
+if result.fun > 1e-3 or np.any(np.isinf(result.x)) or np.any(np.isnan(result.x)):
+    continue   # strictly reject non-compliant candidates
+\end{lstlisting}
+
+\subsection{DE Hyperparameters}
+Table~\ref{tab:de_params} lists the DE hyperparameters used in production runs, together with the rationale for each, as documented during the project's performance-bottleneck analysis.
+
+\begin{table}[H]
+\centering
+\caption{Differential Evolution hyperparameters and rationale}
+\label{tab:de_params}
+\begin{tabular}{|p{3.3cm}|p{2.0cm}|p{7.4cm}|}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+\hline
+Iterations (\texttt{maxiter}) & 600 & Each iteration evaluates every individual in the population, which can be computationally intensive if the evaluation function is complex. \\ \hline
+Population size (\texttt{popsize}) & 25 & Number of candidate solutions maintained during optimization; balances exploration and exploitation of the solution space. \\ \hline
+Workers & $-1$ (all cores) & Uses all available CPU cores to parallelise evaluation, at the cost of some parallel-processing overhead when the evaluation function does not scale perfectly across workers. \\ \hline
+Updating strategy & \texttt{deferred} & All individuals are evaluated before any updates occur within a generation; more conservative but more stable than an \texttt{immediate} update strategy. \\ \hline
+Strategy & \texttt{best1bin} & Standard binomial-crossover, best-vector-relative mutation strategy. \\ \hline
+Acceptance tolerance & $10^{-3}$ (post-hoc filter) & Candidate solutions with residual penalty $> 10^{-3}$, or containing \texttt{inf}/\texttt{nan} values, are rejected outright rather than accepted as ``approximately valid.'' \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{CMA-ES Pipeline}
+\label{sec:cma_pipeline}
+The CMA-ES pipeline (\texttt{CMA-ES/cma-es-local.py}) was introduced after the DE pipeline to investigate whether a covariance-adaptive search could reach fully valid layouts faster than DE, particularly by escaping the local ``geometric deadlocks'' that plain DE occasionally became stuck in during development. The CMA-ES pipeline reuses the same JSON configuration schema, the same Numba-accelerated constraint core, and the same convention of generating five valid layouts per run, differing from the DE pipeline only in the search algorithm itself. Table~\ref{tab:cma_params} lists the key CMA-ES configuration.
+
+\begin{table}[H]
+\centering
+\caption{CMA-ES hyperparameters}
+\label{tab:cma_params}
+\begin{tabular}{|p{4.5cm}|p{2.5cm}|p{5.7cm}|}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Notes} \\
+\hline
+Initial step size $\sigma_0$ & 15.0~mm & Initial standard deviation of the search distribution. \\ \hline
+Population size & 32 & Candidate solutions generated per generation. \\ \hline
+Restarts & multiple, randomised & Multiple random restarts are run to produce up to five distinct valid layouts. \\
+\hline
+\end{tabular}
+\end{table}
+
+As documented in Section~\ref{chap:challenges}, CMA-ES's adaptive covariance-matrix scaling was specifically found to resolve local-minima traps that plain DE could not escape, where components sat close to a valid configuration but could not move without transiently increasing overlap penalty.
+
+\section{PPO Reinforcement Learning Pipeline}
+\label{sec:ppo_pipeline}
+The PPO pipeline is the most substantial engineering effort of the project, replacing the per-board evolutionary search of DE/CMA-ES with a trained neural-network policy that can generate new, valid layouts for previously unseen problem instances via a single forward pass.
+
+\subsection{Motivation}
+The original single-sided reference solution used CMA-ES to score any candidate layout using the shared penalty formulation of Equation~\ref{eq:penalty}, then ran multiple random restarts to obtain up to five distinct valid layouts. The goal of the PPO rewrite was to replace this per-board evolutionary search entirely with an RL agent trained once, offline, whose trained weights can then be reused to generate arbitrarily many new layouts near-instantly, in contrast to DE/CMA-ES, which must always re-run their full search loop from scratch.
+
+\subsection{MDP Formulation and Environment}
+The placement task is formulated as an episodic \emph{iterative-refinement} MDP, implemented as a custom \texttt{gymnasium.Env} subclass (\texttt{PCBPlacementEnv}). Three candidate episode/action structures were considered during design (Table~\ref{tab:ppo_design}); iterative refinement was selected because it allows the policy to make large corrective moves early in an episode and small, precise moves later, closely mirroring how a human designer nudges components into place.
+
+\begin{table}[H]
+\centering
+\caption{PPO design decisions}
+\label{tab:ppo_design}
+\begin{tabular}{|p{3.8cm}|p{5.0cm}|p{3.9cm}|}
+\hline
+\textbf{Decision point} & \textbf{Options considered} & \textbf{Chosen} \\
+\hline
+Episode/action structure & (a) one-shot full-layout output; (b) sequential one-component-at-a-time placement; (c) iterative refinement & (c) Iterative refinement \\ \hline
+Hybridization & (a) pure PPO; (b) PPO + CMA-ES polish per episode; (c) PPO global search + CMA-ES fallback & (a) Pure PPO only \\ \hline
+Reward shaping & (a) sparse; (b) dense & (b) Dense \\
+\hline
+\end{tabular}
+\end{table}
+
+At the start of every episode, all components are initialised to random valid-bounds positions. At every timestep, the policy outputs a small $(\Delta x, \Delta y)$ nudge for \emph{every} component simultaneously; the magnitude of this nudge is annealed within the episode from \texttt{MAX\_STEP\_MM = 12.0~mm} at the start down to \texttt{MIN\_STEP\_MM = 0.25~mm} towards the end, permitting large corrective movements early and fine-grained positioning later without overshoot. Episodes are truncated after \texttt{MAX\_STEPS = 250} timesteps if a fully valid layout has not been found, and terminate immediately, with a large terminal bonus, the instant a layout satisfies every hard constraint.
+
+\subsection{Reward Function Design}
+\label{sec:reward_design}
+The composite, log-compressed penalty score used to derive the reward signal is
+\begin{equation}
+\text{composite} = 3.0 \cdot \log(1{+}P_{\text{border}}) + 3.0 \cdot \log(1{+}P_{\text{overlap}}) + 10.0 \cdot \log(1{+}P_{\text{insert}}) + 0.5 \cdot \log(1{+}P_{\text{cg}}),
+\end{equation}
+\begin{equation}
+r_t = \big(\text{composite}_{t-1} - \text{composite}_t\big) - \text{STEP\_COST} + \text{SUCCESS\_BONUS}\ (\text{on success step only}),
+\end{equation}
+with \texttt{STEP\_COST = 0.01} applied at every step to encourage efficient solutions, and \texttt{SUCCESS\_BONUS = 50} awarded once, on the exact step a layout first becomes fully valid. The $\log(1+P)$ compression is essential because raw overlap/insert penalties can reach $10^9$--$10^{10}$ in early, highly invalid episodes, which would otherwise destabilise PPO's value-function learning. The relative weighting was retuned mid-project: border and overlap weights were reduced from 5.0 to 3.0 once those constraints were reliably being solved, while the insert-hole weight was raised from 5.0 to 10.0 after it was identified as the hardest constraint to satisfy exactly, and the CG weight was kept lowest (0.5) to reflect its status as the soft, priority-2 objective. This weighting scheme also had to specifically defeat a reward-hacking failure mode in which the agent could trivially satisfy the CoG penalty by collapsing all components to the origin while ignoring overlap -- solved by ensuring hard physical-violation penalties always dominate the soft CoG term, as discussed further in Chapter~\ref{chap:challenges}.
+
+\subsection{Network Architecture and Hyperparameters}
+The PPO policy uses Stable-Baselines3's \texttt{MlpPolicy} with the architecture and hyperparameters summarised in Table~\ref{tab:ppo_arch} and Table~\ref{tab:ppo_hyper}.
+
+\begin{table}[H]
+\centering
+\caption{PPO Actor--Critic network architecture}
+\label{tab:ppo_arch}
+\begin{tabular}{|p{3.6cm}|p{9.6cm}|}
+\hline
+\textbf{Component} & \textbf{Specification} \\
+\hline
+Actor (policy) network & Fully connected MLP, 2 hidden layers of 256 neurons each; maps observed state directly to placement actions. \\ \hline
+Critic (value) network & Matching MLP architecture (2 hidden layers of 256 neurons); estimates the state-value function. \\ \hline
+Activation function & Hyperbolic tangent (tanh), range $[-1, 1]$, zero-centred, for smooth gradient flow across hidden layers. \\ \hline
+Optimizer & Adam, initial learning rate $\alpha = 3 \times 10^{-4}$. \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{PPO training hyperparameters}
+\label{tab:ppo_hyper}
+\begin{tabular}{|p{4.6cm}|p{2.4cm}|p{6.2cm}|}
+\hline
+\textbf{Hyperparameter} & \textbf{Value} & \textbf{Purpose} \\
+\hline
+Clipping threshold $\varepsilon$ & 0.2 & Restricts each policy update to a relative range of 0.8--1.2$\times$ the previous policy, preventing destructive updates. \\ \hline
+Rollout buffer size & 1{,}024 steps/env & Interaction steps collected per parallel environment before an update. \\ \hline
+Mini-batch size & 256 & Size of mini-batches drawn from the rollout buffer during optimization. \\ \hline
+Epochs per update & 10 & Number of optimization passes over each collected rollout buffer. \\ \hline
+Discount factor $\gamma$ & 0.99 & Prioritises long-term layout optimality over immediate reward. \\ \hline
+GAE factor $\lambda$ & 0.95 & Generalized Advantage Estimation smoothing; balances variance reduction with bias control. \\ \hline
+Entropy coefficient $c_1$ & 0.005 & Encourages exploration and prevents premature convergence. \\ \hline
+Value-loss weight $c_2$ & 0.5 & Weight of MSE value-function loss relative to the policy objective. \\ \hline
+Max gradient norm & 0.5 & Gradient clipping for stable backpropagation. \\ \hline
+Total training budget & 1{,}000{,}000+ steps & Continuous training over environment interactions (extended to 6M steps in the final checkpoint). \\ \hline
+Parallel environments & 8 (\texttt{SubprocVecEnv}) & Training parallelism; observations/rewards normalised via \texttt{VecNormalize}. \\ \hline
+Episode horizon & 250 steps & \texttt{MAX\_STEPS} before forced truncation. \\ \hline
+Step cost / success bonus & 0.01 / 50 & See reward formulation, Section~\ref{sec:reward_design}. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Training Infrastructure and Execution}
+Training used \texttt{SubprocVecEnv} with 8 parallel environments plus \texttt{VecNormalize} for observation/reward normalization; inference used a \texttt{DummyVecEnv} with 8 environments re-using the same saved \texttt{VecNormalize} statistics with \texttt{training=False}. All geometric constraint evaluation remained on CPU via Numba JIT, while the PPO neural network itself ran on Apple Silicon's Metal Performance Shaders (MPS) backend. TensorBoard logging (\texttt{tb\_logs/}) was used throughout to monitor training metrics, and a custom \texttt{BestLayoutCallback}, inheriting from Stable-Baselines3's \texttt{BaseCallback}, continuously tracked the best-performing layout found during training.
+
+\subsection{Multi-Layout Inference Pipeline}
+Once trained, generating layouts is a pure inference operation: the trained model and its \texttt{VecNormalize} statistics are loaded, many deterministic rollouts of the policy are executed from independent random resets, each candidate layout is independently re-verified against the exact (non-learned) constraint functions, near-duplicate layouts are removed via a mean per-component displacement threshold (\texttt{DEDUP\_DIST\_MM}), and up to \texttt{MAX\_LAYOUTS = 5} distinct layouts are kept, ranked by CoG penalty. This entire pipeline is also exposed as a standalone command-line script, \texttt{gen\_from\_inference.py}, configurable via \texttt{--episodes}, \texttt{--parallel}, \texttt{--max\_layouts}, \texttt{--dedup\_dist}, and \texttt{--seed} flags, so that new layouts can be regenerated without opening the training notebook.
+
+\subsection{Training Dataset}
+The \texttt{PPO/datasets/} directory contains 1{,}049 valid layouts stored in \texttt{.npz} format, generated during earlier stages of the project. These represent previously discovered valid configurations of the underlying assembly and are retained alongside the PPO pipeline as a reference/warm-start resource, although the final PPO policy reported in this project was trained purely through environment interaction (self-play against the reward function) rather than supervised imitation of this dataset.
+
+\section{Comparative Study Methodology}
+Once all three solvers were independently validated, a dedicated comparative study\\ (\texttt{comparission/run\_comparative\_study.py}) was implemented to benchmark them head-to-head under identical problem instances. The study measures, per algorithm: wall-clock time to solve a single board; fitness-penalty trajectory over normalised search progress; behaviour as the number of components scales from 4 to 20+; statistical significance of pairwise performance differences over repeated runs; the spatial distribution of chosen component placements; the marginal cost of generating additional boards once initial setup/training cost has been paid; and the decomposition of any residual penalty into its border/overlap/insert/CoG components. The convergence-trajectory analysis specifically was computed and finalised in a companion notebook, \texttt{comparission/convergence\_trajectory.ipynb}, to obtain a clean, variance-shading-free comparison of how rapidly each algorithm reduces its penalty score. Full results of this study are presented in Section~\ref{sec:comparative_results}.
+
+% ======================================================================
+\chapter{Implementation}
+\label{chap:implementation}
+% ======================================================================
+
+\section{Tools, Libraries, and Environment}
+Table~\ref{tab:tools} summarises the software stack used across the project.
+
+\begin{table}[H]
+\centering
+\caption{Software stack}
+\label{tab:tools}
+\begin{tabular}{|p{3.6cm}|p{9.6cm}|}
+\hline
+\textbf{Category} & \textbf{Tools / Libraries} \\
+\hline
+Numerical optimization & SciPy (\texttt{differential\_evolution}), \texttt{cma} (CMA-ES reference implementation) \\ \hline
+JIT acceleration & Numba (\texttt{@njit}, \texttt{prange}) for constraint/fitness evaluation \\ \hline
+Reinforcement learning & Gymnasium (custom \texttt{Env}), Stable-Baselines3 (PPO, \texttt{MlpPolicy}), PyTorch \\ \hline
+Data \& configuration & NumPy, JSON (board/component schema), \texttt{.npz} (layout datasets) \\ \hline
+Visualization & Matplotlib (Agg backend), custom rectangle/circle patch rendering \\ \hline
+Experiment tracking & TensorBoard (\texttt{tb\_logs/}) \\ \hline
+Development environment & Jupyter Notebook (offline / no-internet-access development environment; see Chapter~\ref{chap:challenges}) \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Development Environment Constraints}
+A defining engineering constraint of this project, discussed further in Chapter~\ref{chap:challenges}, was that the primary development machine had no internet access and could not install external software or additional Python packages beyond what was already available in the pre-installed Jupyter environment. All algorithms, custom penalty logic, and visualization code were consequently authored, tested, and iterated on a separate internet-connected machine before being transferred into the restricted environment.
+
+\section{Fitness Evaluation Core}
+The single most performance-critical component of the entire pipeline is the pairwise constraint-evaluation core, since it must be invoked once per candidate solution, for every member of a population (25 for DE, 32 for CMA-ES), at every one of hundreds of generations, and again once per environment step across 8 parallel PPO training environments. All three solvers therefore share the same Numba-compiled evaluation strategy: geometry is expressed as flat NumPy arrays (not Python objects) so that Numba's \texttt{nopython} mode can compile the full loop nest to native code, and the CoG, border, overlap, and insert-distance sub-penalties are all computed within a single fused pass over the component list to minimise redundant memory traffic. This design choice was central to keeping wall-clock optimization time practical: without JIT compilation, evaluating thousands of candidate component arrangements per second for overlap, border, and insert-hole spacing in interpreted Python would have made both DE and CMA-ES impractically slow, and would have made 8-way parallel PPO training infeasible on the development hardware.
+
+\section{Visualization Pipeline}
+Every solver shares a common Matplotlib-based visualization pipeline (using the headless \texttt{Agg} backend so that figures can be rendered without a GUI, suitable for batch/offline execution) that produces, per layout:
+\begin{itemize}
+    \item a \textbf{front/back projection view}, in which rectangular components are drawn as rectangle patches and circular components as circle patches, coloured/labelled by name, with front-face and back-face components shown together for a full assembly picture;
+    \item a \textbf{proximity / distance map}, visualising the pin-to-pin distances between insert holes to allow visual sanity-checking of the insert-proximity constraint;
+    \item a \textbf{tabular data export} (CSV) listing, per component: name, face, mass, dimensions, and its individual CoG  (for PPO only).
+\end{itemize}
+For the PPO pipeline specifically, the proximity map was refined during development into a true ``see-through'' rendering: back-layer components are drawn first with reduced opacity ($\alpha = 0.30$), hatched fill, and lower z-order (ghosted), while front-layer components are drawn second at full opacity ($\alpha = 0.85$) and higher z-order, with insert-hole pin markers colour-coded by layer (red = front, orange = back) so that overlapping pins on opposite faces remain visually distinguishable. This is documented further, with worked examples, in Chapter~\ref{chap:results}.
+
+\section{Reproducibility}
+Every solver run is seeded (DE via SciPy's \texttt{seed} argument, CMA-ES via its internal RNG seed, and PPO's inference rollouts via a \texttt{--seed} flag defaulting to 42) so that reported results and figures can, in principle, be regenerated exactly. All generated layouts are additionally independently re-verified against the ground-truth (non-learned) constraint functions before being accepted, which is particularly important for the PPO pipeline since the trained policy's outputs are otherwise unconstrained neural-network predictions.
+
+% ======================================================================
+\chapter{Results and Discussion}
+\label{chap:results}
+% ======================================================================
+
+\section{Previous-Work Baseline}
+Figure~\ref{fig:prev_work} presents representative console interaction and output from the original guided DE prototype (Section~\ref{sec:previous_work}), used as the functional baseline against which every subsequent constraint layer and solver was validated. The prototype accepts, for a 5-component test assembly on a $200 \times 200$~mm panel, the panel dimensions and per-component name/length/width/mass, and arranges the components to null the CoG without any collision, border, or insert-hole modelling.
+
+\begin{table}[H]
+\centering
+\caption{Baseline 5-component test assembly used to validate the previous-work prototype}
+\label{tab:baseline_components}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Element} & \textbf{Length (mm)} & \textbf{Width (mm)} & \textbf{Mass (kg)} \\
+\hline
+PCU & 30 & 40 & 1.5 \\ \hline
+OBC & 50 & 50 & 2.3 \\ \hline
+SPS & 20 & 20 & 0.8 \\ \hline
+RPU & 60 & 30 & 0.7 \\ \hline
+RS  & 20 & 20 & 1.9 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{report_making/figures/previous_work_baseline.png}
+\caption{Baseline CoG-only placement output from the original guided DE prototype.}
+\label{fig:prev_work}
+\end{figure}
+
+\subsection{Constraint Verification: Border, Clearance, and Insert Holes}
+Figures corresponding to Slides 8, 12, and 14 of the project presentation visually confirm, in turn, that the border margin (20~mm on the baseline $200\times200$~mm panel), the same-face clearance/Connector-Face rule, and the 4/6~mm insert-hole proximity rule are each correctly enforced on the baseline assembly before progressing to the full production pipeline.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{report_making/figures/constraint_border.png}
+\caption{Verification of border-containment constraint on the baseline assembly.}
+\label{fig:c1_output}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{report_making/figures/constraint_clearance.png}
+\caption{Verification of clearance and connector-face constraint on the baseline assembly.}
+\label{fig:c2_output}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{report_making/figures/constraint_insert_holes.png}
+\caption{Verification of insert-hole minimum-separation constraint on the baseline assembly.}
+\label{fig:c3_output}
+\end{figure}
+
+% ----------------------------------------------------------------------
+% Old-layout / new-layout specification tables
+% ----------------------------------------------------------------------
+\par
+\noindent{\large\bfseries Old and New Layout Specifications}\par\medskip
+The production results are evaluated on two distinct configurations. \textbf{Layout1} is the original configuration used during the initial development and testing of the placement pipeline, while \textbf{Layout2} is the newer configuration worked on subsequently. The tables below reproduce the specifications supplied in the corresponding XLSX files so that the results in the following sections can be interpreted against the correct problem instance.
+
+\begin{table}[H]
+\centering
+\caption{Old layout (Layout1) board and component specification}
+\label{tab:layout_old}
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Name} & \textbf{L} & \textbf{B} & \textbf{Mass} & \textbf{Insert} & \textbf{Ins. Qty.} & \textbf{Obj. Qty.} & \textbf{CF} & \textbf{Shape/Dia.} \\
+\hline
+Board & 960 & 582.4 & -- & -- & -- & -- & -- & -- \\
+\hline
+PDS & 100 & 112 & 1.5 & 4 & 4 & 1 & [1,3] & Rectangle \\
+\hline
+CCRR & -- & -- & 0.15 & 6 & 6 & 2 & -- & Circle, $\varnothing45$ \\
+\hline
+LD & -- & -- & 0.04 & 6 & 3 & 6 & -- & Circle, $\varnothing32$ \\
+\hline
+RS & 110 & 90.5 & 1.5 & 4 & 4 & 1 & [1,3] & Rectangle \\
+\hline
+BM1 & 100 & 100 & 1.5 & 6 & 4 & 1 & [1] & Rectangle \\
+\hline
+PB & 69 & 16 & 0.1 & 4 & 2 & 4 & [1] & Rectangle \\
+\hline
+RPU & 260 & 253 & 3 & 4 & 6 & 1 & [2,4] & Rectangle \\
+\hline
+MES & 128 & 117 & 0.125 & 6 & 4 & 1 & [3,4] & Rectangle \\
+\hline
+MT20 & 275 & 25 & 0.4 & 4 & 4 & 1 & [1] & Rectangle \\
+\hline
+\end{tabular}
+\vspace{2pt}
+\parbox{0.94\textwidth}{\footnotesize L = Length (mm), B = Breadth (mm), Mass in kg. The XLSX identifies PDS, CCRR, LD and RS under Front, and BM1, PB, RPU, MES and MT20 under Back.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{New layout (Layout2) board and component specification}
+\label{tab:layout_new}
+\scriptsize
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Name} & \textbf{L} & \textbf{B} & \textbf{Mass} & \textbf{Insert} & \textbf{Ins. Qty.} & \textbf{Obj. Qty.} & \textbf{FC} \\
+\hline
+Board & 3285 & 1458 & -- & -- & -- & -- & -- \\
+\hline
+Bat10 & 557 & 268 & 37.5 & 6 & 24 & 1 & 1 \\
+\hline
+Bat20 & 557 & 268 & 37.5 & 6 & 24 & 1 & 1 \\
+\hline
+IRU & 366 & 268 & 13 & 6 & 6 & 1 & 1 \\
+\hline
+OBC10 & 362 & 252 & 16 & 6 & 24 & 1 & 1 \\
+\hline
+OBC20 & 362 & 252 & 16 & 6 & 24 & 1 & 1 \\
+\hline
+ICP & 286 & 337 & 14.9 & 4 & 20 & 1 & -- \\
+\hline
+SPDU & 376 & 304 & 9 & 4 & 10 & 1 & 0,1,2,3 \\
+\hline
+FDM10 & 224 & 51 & 3 & 4 & 6 & 1 & 0,1,2,3 \\
+\hline
+FDM20 & 224 & 51 & 3 & 4 & 6 & 1 & 0,1,2,3 \\
+\hline
+IAPM1 & 250 & 250 & 14 & 6 & 6 & 1 & 0,1,2,3 \\
+\hline
+IAPM2 & 250 & 250 & 14 & 6 & 6 & 1 & 0,1,2,3 \\
+\hline
+IAPR1 & 250 & 250 & 14 & 6 & 6 & 1 & 0,1,2,3 \\
+\hline
+IAPR2 & 250 & 250 & 14 & 6 & 6 & 1 & 0,1,2,3 \\
+\hline
+BMU51 & 106 & 97 & 1.5 & 4 & 4 & 1 & 1 \\
+\hline
+BMU52 & 106 & 97 & 1.5 & 4 & 4 & 1 & 1 \\
+\hline
+BMU53 & 106 & 97 & 1.5 & 4 & 4 & 1 & 1 \\
+\hline
+BMU54 & 106 & 97 & 1.5 & 4 & 4 & 1 & 1 \\
+\hline
+SSPA10 & 120 & 195 & 3.5 & 4 & 6 & 1 & 0,2 \\
+\hline
+SSPA20 & 120 & 195 & 3.5 & 4 & 6 & 1 & 0,2 \\
+\hline
+SSPA30 & 120 & 195 & 3.5 & 4 & 6 & 1 & 0,2 \\
+\hline
+SSPA40 & 120 & 195 & 3.5 & 4 & 6 & 1 & 0,2 \\
+\hline
+KABANDTRT10 & 180 & 220 & 4 & 4 & 4 & 1 & 1,4 \\
+\hline
+KABANDTRT20 & 180 & 220 & 4 & 4 & 4 & 1 & 1,4 \\
+\hline
+SAGS & 120 & 90 & 2 & 4 & 4 & 1 & 0,2 \\
+\hline
+TRM10 & 182 & 75 & 1.8 & 4 & 4 & 1 & 0,2 \\
+\hline
+TRM20 & 182 & 75 & 1.8 & 4 & 4 & 1 & 0,2 \\
+\hline
+TRM30 & 182 & 75 & 1.8 & 4 & 4 & 1 & 0,2 \\
+\hline
+TRM40 & 182 & 75 & 1.8 & 4 & 4 & 1 & 0,2 \\
+\hline
+TRM50 & 182 & 75 & 1.8 & 4 & 4 & 1 & 0,2 \\
+\hline
+TRM60 & 182 & 75 & 1.8 & 4 & 4 & 1 & 0,2 \\
+\hline
+\end{tabular}
+\vspace{2pt}
+\parbox{0.94\textwidth}{\footnotesize L = Length (mm), B = Breadth (mm), Mass in kg. The FC values are reproduced exactly as supplied in the Layout2 XLSX. The source sheet does not specify FRONT/BACK face labels.}
+\end{table}
+
+\section{Differential Evolution Results}
+The Differential Evolution (DE) results are presented for both configurations so that the effect of moving from the original working problem to the recently developed Layout2 problem can be seen directly. \textbf{Figure~\ref{fig:de_old}} is the representative output from the old Layout1 configuration, whereas \textbf{Figure~\ref{fig:de_new}} is the corresponding output from the new Layout2 configuration. In each case, the main layout view is paired with its distance-mapping output; therefore, the two figures should be interpreted as two views of the same solver result rather than as independent experiments.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/DE/de_outputs/old_layout/layout_1_main.png}
+\caption{Main layout view -- old Layout1}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/DE/de_outputs/old_layout/layout_1_distance_map.png}
+\caption{Distance mapping -- old Layout1}
+\end{subfigure}
+\caption{Differential Evolution output for the old layout (Layout1): main placement and corresponding insert-distance mapping.}
+\label{fig:de_old}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/DE/de_outputs/new_layout/layout_1_main.png}
+\caption{Main layout view -- new Layout2}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/DE/de_outputs/new_layout/layout_1_distance_map.png}
+\caption{Distance mapping -- new Layout2}
+\end{subfigure}
+\caption{Differential Evolution output for the new layout (Layout2): main placement and corresponding insert-distance mapping.}
+\label{fig:de_new}
+\end{figure}
+
+\subsection{DE Performance Bottleneck Analysis}
+The DE configuration (600 iterations $\times$ 25 population, all CPU cores, deferred updating) reflects a deliberate trade-off: larger population sizes and iteration counts improve the probability of finding a fully compliant solution but increase wall-clock cost roughly linearly, while parallel-processing overhead across CPU workers can partially offset the benefit of using all available cores when the per-candidate evaluation function does not scale perfectly. The old and new layout results also represent different problem scales: Layout1 is the original, relatively compact test configuration, whereas Layout2 contains a substantially larger panel and a much larger component set. Consequently, the two results should be compared primarily as demonstrations of the pipeline operating on the two configurations rather than as a controlled timing experiment.
+
+\section{CMA-ES Results}
+CMA-ES was evaluated using the same two layout configurations and the same physical constraint model. \textbf{Figure~\ref{fig:cma_old}} shows a representative result for the old Layout1 configuration, while \textbf{Figure~\ref{fig:cma_new}} shows the corresponding result for the new Layout2 configuration. As with DE, each figure contains both the main placement view and the associated distance map so that component placement and insert-distance compliance can be inspected together.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/CMA-ES/cma-es_output/old_layout/layout_1_main.png}
+\caption{Main layout view -- old Layout1}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/CMA-ES/cma-es_output/old_layout/layout_1_distance_map.png}
+\caption{Distance mapping -- old Layout1}
+\end{subfigure}
+\caption{CMA-ES output for the old layout (Layout1): main placement and corresponding insert-distance mapping.}
+\label{fig:cma_old}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{CMA-ES/cma-es_output/new_layout/layout_1_main.png}
+\caption{Main layout view -- new Layout2}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{CMA-ES/cma-es_output/new_layout/layout_1_distance_map.png}
+\caption{Distance mapping -- new Layout2}
+\end{subfigure}
+\caption{CMA-ES output for the new layout (Layout2): main placement and corresponding insert-distance mapping.}
+\label{fig:cma_new}
+\end{figure}
+
+Qualitatively, CMA-ES was observed during development to converge to a fully valid layout more reliably than plain DE on configurations where components were densely packed relative to the panel area, consistent with its adaptive covariance-matrix mechanism being specifically effective at escaping the local ``geometric deadlocks'' documented in Chapter~\ref{chap:challenges}. The Layout2 result demonstrates that the same CMA-ES pipeline can be applied to the newer configuration without changing the underlying optimization formulation.
+
+\section{PPO Results}
+The PPO results are likewise presented as an old-layout/new-layout pair. \textbf{Figure~\ref{fig:ppo_old}} represents the final inference output for the original Layout1 problem, while \textbf{Figure~\ref{fig:ppo_new}} represents the corresponding output for the newer Layout2 problem. Each result combines the main placement visualization with its see-through distance mapping, allowing the physical placement and insert-distance relationships to be inspected together. The PPO result tables previously included in this section have been removed as requested; the visual results are retained because they directly show the layouts produced by the trained policy and their geometric verification.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{PPO/ppo_output/old_layout/layout_1_main.png}
+\caption{Main layout view -- old Layout1}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{PPO/ppo_output/old_layout/layout_1_distance_map.png}
+\caption{Distance mapping -- old Layout1}
+\end{subfigure}
+\caption{PPO output for the old layout (Layout1): main placement and corresponding see-through insert-distance mapping.}
+\label{fig:ppo_old}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/PPO/ppo_output/new_layout/layout_1_main.png}
+\caption{Main layout view -- new Layout2}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+\includegraphics[width=\textwidth]{report_making/PPO/ppo_output/new_layout/layout_1_distance_map.png}
+\caption{Distance mapping -- new Layout2}
+\end{subfigure}
+\caption{PPO output for the new layout (Layout2): main placement and corresponding see-through insert-distance mapping.}
+\label{fig:ppo_new}
+\end{figure}
+
+\section{Comparative Performance Analysis}
+\label{sec:comparative_results}
+This section presents the eight comparative results generated by the head-to-head study (Section~4.6). Each result is deliberately kept together with its explanation and figure on a single page so that the reader can interpret the plotted evidence without having to turn to a separate page for the associated discussion.
+
+
+\subsection{Computational Cost (Wall-Clock Time)}
+Figure~\ref{fig:comp_cost} compares the average execution time, in seconds, required by each algorithm to solve a single board layout. This metric evaluates real-time feasibility for a production engineering workflow. PPO requires approximately 0.02~s per inference step once trained, whereas CMA-ES requires approximately 1.5~s and DE requires approximately 2.5~s, since both metaheuristics must perform iterative objective re-evaluation from scratch for every new board.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/2_computational_cost_all3.png}
+\caption{Computational cost (wall-clock time) comparison across DE, CMA-ES, and PPO.}
+\label{fig:comp_cost}
+\end{figure}
+
+\clearpage
+\subsection{Spatial Placement Density Heatmaps}
+Figure~\ref{fig:spatial_heatmap} shows side-by-side Kernel Density Estimation (KDE) contour heatmaps of chosen component placements on the panel grid, for all three algorithms. This visualises each algorithm's physical placement bias: DE tends to push components toward the panel's boundary margins, while PPO centres them more safely within the interior of the clearance envelopes.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/10_spatial_heatmaps_all3.png}
+\caption{Spatial placement density (KDE) heatmaps for DE, CMA-ES, and PPO.}
+\label{fig:spatial_heatmap}
+\end{figure}
+
+
+\subsection{Convergence Trajectory}
+Figure~\ref{fig:convergence} plots the mean fitness-penalty score against normalised search progress (0--100\%) for all three algorithms, providing a direct, variance-shading-free comparison of how rapidly each algorithm minimises constraint violations and reaches a stable, feasible layout.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/convergence_trajectories.png}
+\caption{Convergence trajectory: mean fitness penalty vs. normalised search progress.}
+\label{fig:convergence}
+\end{figure}
+
+\clearpage
+\subsection{Statistical Significance (p-value Heatmap)}
+Figure~\ref{fig:pvalue} presents a pairwise statistical-significance (p-value) heatmap across repeated runs of each algorithm. A p-value below 0.05 indicates that the observed difference between the compared algorithms is statistically significant under the test used in the comparative study.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/4_statistical_significance_all3.png}
+\caption{Pairwise statistical significance (p-value heatmap) across DE, CMA-ES, and PPO.}
+\label{fig:pvalue}
+\end{figure}
+
+\clearpage
+\subsection{Scalability Analysis}
+Figure~\ref{fig:scalability} shows execution time as the number of components scales from 4 to 20+. Evolutionary approaches (DE, CMA-ES) scale approximately quadratically to polynomially, in the range $O(N^{1.9})$ to $O(N^{2.2})$, since the pairwise overlap/insert-distance checks and the search space itself both grow with $N$, whereas PPO inference scales near-linearly, $O(N)$, since it performs a fixed-cost forward pass per component nudge regardless of population-based search overhead.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/5_scalability_all3.png}
+\caption{Scalability analysis: execution time vs. number of components.}
+\label{fig:scalability}
+\end{figure}
+
+\clearpage
+\subsection{Solution Diversity vs. Quality (Pareto Frontier)}
+Figure~\ref{fig:diversity} maps spatial component dispersion (diversity) against fitness score (quality) as a scatter plot, identifying the trade-off between finding a single high-quality valid layout and finding a set of varied layouts -- directly relevant to the project's five-layouts-per-run requirement, since engineers benefit from genuinely distinct alternatives rather than five near-identical solutions.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/6_solution_diversity_all3.png}
+\caption{Solution diversity vs. quality (Pareto frontier) across DE, CMA-ES, and PPO.}
+\label{fig:diversity}
+\end{figure}
+
+\clearpage
+\subsection{Amortization Analysis (Multi-Board Generation Speed)}
+Figure~\ref{fig:amortization} compares how total design time accumulates when generating layouts for 1 to 50 boards, using a pre-trained PPO model versus starting DE/CMA-ES from scratch for every board. Because CMA-ES and DE have no persistent memory of previously solved problems, they cannot save learned knowledge into a reusable model file and must re-run their entire mathematical search loop for every new board, so their cumulative time grows steeply, at roughly 1.5--2.5~s per additional layout. A pre-trained PPO model, in contrast, has its neural-network weights already saved to disk; it spends approximately 0.1~s reading the model file once, and thereafter generates each new layout almost instantly via direct inference, in under 0.02~s per layout.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/7_amortization_analysis_pretrained.png}
+\caption{Amortization analysis: cumulative design time for 1--50 boards, pre-trained PPO vs. DE/CMA-ES.}
+\label{fig:amortization}
+\end{figure}
+
+\clearpage
+\subsection{Constraint Violation Breakdown}
+Figure~\ref{fig:constraint_breakdown} decomposes residual penalty scores into a stacked bar chart of border overruns, overlaps, insert-clearance violations, and CoG imbalance, pinpointing each algorithm's specific weaknesses -- for instance, an algorithm may handle border bounds effortlessly while struggling with fine insert-clearance penalties, or vice versa.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{comparission/comparission_output/8_constraint_breakdown_all3.png}
+\caption{Constraint violation breakdown by penalty category, across DE, CMA-ES, and PPO.}
+\label{fig:constraint_breakdown}
+\end{figure}
+
+\clearpage
+\subsection{Discussion Summary}
+Table~\ref{tab:algo_summary} synthesises the comparative results into a single qualitative summary across the three algorithms.
+
+\begin{table}[H]
+\centering
+\caption{Qualitative summary of algorithm trade-offs}
+\label{tab:algo_summary}
+\begin{tabular}{|p{2.6cm}|p{3.3cm}|p{3.3cm}|p{3.4cm}|}
+\hline
+\textbf{Axis} & \textbf{DE} & \textbf{CMA-ES} & \textbf{PPO} \\
+\hline
+Per-board time & Slowest ($\approx$2.5s) & Faster ($\approx$1.5s) & Fastest ($\approx$0.02s, post-training) \\ \hline
+Setup cost & None & None & High (training run, hours) \\ \hline
+Scalability with $N$ & $O(N^{1.9\text{--}2.2})$ & $O(N^{1.9\text{--}2.2})$ & $\approx O(N)$ \\ \hline
+Multi-board amortization & Poor (re-solves every time) & Poor (re-solves every time) & Excellent (one-time cost) \\ \hline
+Placement bias & Boundary-hugging & Moderate & Interior-centred \\ \hline
+Local-minima robustness & Prone to deadlocks & Strong (adaptive covariance) & Strong (learned policy) \\ \hline
+Constraint compliance & Exact on accepted solutions & Exact on accepted solutions & Exact after independent re-verification \\
+\hline
+\end{tabular}
+\end{table}
+
+% ======================================================================
+\chapter{Challenges and Solutions}
+\label{chap:challenges}
+% ======================================================================
+Four major engineering challenges were encountered and resolved over the course of the project, summarised in Table~\ref{tab:challenges} and elaborated below.
+
+\begin{table}[H]
+\centering
+\caption{Summary of engineering challenges and their resolutions}
+\label{tab:challenges}
+\begin{tabular}{|p{4.0cm}|p{8.2cm}|}
+\hline
+\textbf{Challenge} & \textbf{Resolution} \\
+\hline
+Restricted development environment & Prepared and pre-validated all algorithms, custom logic, and objective functions locally, offline, before transferring to the restricted target environment. \\ \hline
+Speed vs.\ accuracy trade-off & Adopted Numba JIT compilation for all geometric constraint evaluation, enabling smooth execution even on modest hardware. \\ \hline
+Zero-shot generalising PPO reward design & Carefully weighted relative penalty scaling so hard physical violations (overlap, border breach) always dominate the soft CoG term, preventing reward hacking. \\ \hline
+DE local-minima stagnation & Introduced CMA-ES's adaptive covariance-matrix step-size scaling to dynamically escape tight geometric deadlocks that plain DE could not resolve. \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Developing Under Strict Environment Restrictions}
+The primary development environment had no internet access and disallowed installation of external software or additional Python libraries beyond the pre-installed Jupyter Notebook stack. This ruled out on-the-fly experimentation with new libraries within the target environment. The resolution was to prepare all key algorithms, custom penalty logic, and objective functions on a separate, internet-connected machine, thoroughly validate them there, and only then transfer the finalised code into the restricted environment for execution against the actual project data.
+
+\section{Balancing Speed versus Accuracy}
+Evaluating thousands of candidate component arrangements per second -- checking for overlaps, board-boundary violations, and insert-hole spacing across every pairwise combination of components -- is computationally expensive in standard interpreted Python, especially at the population sizes and generation counts required by DE (25 $\times$ 600) and CMA-ES (32 per generation), and at the environment-step throughput required by 8-way parallel PPO training. Numba JIT compilation was adopted to translate the core mathematical evaluation routines into optimized machine code, allowing calculations to run smoothly even on the modest hardware available (a MacBook with 18~GB RAM).
+
+\section{Designing a Zero-Shot Generalising Reward Function}
+Teaching the PPO agent to place components accurately across different panel sizes and component sets, without discovering degenerate shortcuts, proved to be the most delicate design challenge in the project. In particular, an under-constrained reward could allow the agent to trivially satisfy the CoG penalty term by collapsing every component toward the origin $(0,0)$, while entirely ignoring the (also present, but insufficiently weighted) overlap penalty -- a classic reward-hacking failure mode in RL. The resolution was to carefully weight relative penalty scaling so that hard physical violations (overlaps and border breaches) always dominate the soft CoG offset penalty, both in raw magnitude and after the log-compression described in Section~\ref{sec:reward_design}, ensuring the agent could not improve its reward by sacrificing physical feasibility for CoG accuracy.
+
+\section{Fixing Algorithm Stagnation (Local-Minima Traps)}
+During development, the standard Differential Evolution solver was repeatedly observed to become stuck in local traps: configurations in which components were close to a fully valid arrangement, but could not move without transiently increasing the overlap penalty, which DE's simple mutation/crossover mechanism could not reliably escape. This motivated the introduction of CMA-ES as a second solver: its adaptive covariance-matrix step-size scaling allows the search distribution to dynamically reshape itself around the local geometry of the problem, enabling it to escape tight geometric deadlocks that repeatedly stalled plain DE.
+
+% ======================================================================
+\chapter{Future Scope}
+\label{chap:future}
+% ======================================================================
+Several directions for extending this work were identified over the course of the project:
+\begin{itemize}
+    \item \textbf{Further PPO training.} Continuing training from the existing 3.5M-timestep checkpoint (no code changes required) would likely both lower the achievable CoG penalty further and raise the deterministic inference success rate beyond the current 2.75\%.
+    
+    \item \textbf{Hyperparameter tuning pass} across PPO's learning rate, rollout length (\texttt{n\_steps}), entropy coefficient, action-annealing bounds (\texttt{MAX\_STEP\_MM}/\texttt{MIN\_STEP\_MM}), and the composite reward weighting (\texttt{SCORE\_WEIGHTS}), to further improve CG penalty or inference success rate.
+    
+    \item \textbf{Tuning the number of returned layouts and diversity threshold} (\texttt{N\_EPISODES}, \texttt{DEDUP\_DIST\_MM}) to give engineers more than five candidate layouts, or a stricter/looser notion of what counts as a genuinely ``distinct'' alternative.
+    
+    \item \textbf{Component rotation.} Extending the design-variable vector to include a discrete or continuous orientation angle per component, rather than treating footprints as axis-fixed.
+    
+    \item \textbf{Field of View (FoV) keepout cones.} Extending the state space to include 3D volumetric clearance cones for optical sensors, star trackers, and cameras, ensuring that no adjacent component obstructs their required angular sightlines.
+    
+    \item \textbf{Thermal dissipation and hot-spot spacing.} Incorporating thermal dissipation models as spatial constraints to maintain minimum separation distances between high-power units (e.g., PDUs) and heat-sensitive components, thereby preventing the formation of thermal hot-spots.
+    
+    \item \textbf{Connector mating and harness bend radii.} Adding directional clearance envelopes in front of connector faces to account for cable routing, connector mating depth, and the minimum allowable wire-harness bend radii.
+    
+    \item \textbf{Thermal and structural co-optimization.} Incorporating thermal dissipation paths and structural load paths as additional objective/constraint terms alongside the current CoG-centric formulation.
+    
+    \item \textbf{Hybrid solvers.} Investigating a PPO-global-search-plus-CMA-ES-polish hybrid (considered but not selected during initial design, Table~\ref{tab:ppo_design}), which could combine PPO's amortized speed with CMA-ES's precise local refinement.
+\end{itemize}
+% ======================================================================
+\chapter{Conclusion}
+\label{chap:conclusion}
+% ======================================================================
+This project delivered a complete, JSON-configuration-driven pipeline for automating dual-sided spacecraft panel component placement under a realistic hierarchy of physical constraints: exact Centre-of-Gravity balancing, zero-overlap same-face clearance (including directional Connector-Face overrides), panel-border containment, and cross-face insert-hole minimum-separation rules. Starting from a single-cell, guide-supplied Differential Evolution prototype capable only of CoG balancing on a handful of interactively entered components, the project progressively layered in every required constraint, generalised to circular components and true front/back dual-sided placement, and ultimately implemented and rigorously compared three qualitatively distinct optimization paradigms -- Differential Evolution, CMA-ES, and Proximal Policy Optimization -- all sharing a common Numba-JIT-accelerated constraint core and a common convention of generating five distinct, fully compliant layouts per run.
+
+The comparative study demonstrated that while DE and CMA-ES remain simple, reliable, per-board solvers -- with CMA-ES's adaptive covariance-matrix mechanism providing measurably better robustness against local-minima stagnation than plain DE -- both must always re-solve the placement problem from scratch, with wall-clock cost per board of roughly 1.5--2.5~s and super-linear scaling with the number of components. The trained PPO policy, in contrast, amortizes a one-time training cost into sub-0.02-second, near-linear-scaling inference for every subsequent board, while still satisfying every hard geometric constraint exactly after independent re-verification, making it especially attractive for a design workflow that must repeatedly generate layouts for many similar panel variants. The successful, unmodified application of all three solvers to a new, previously unseen panel specification supplied late in the project confirms that the resulting pipeline generalises beyond its original development configuration, fulfilling the project's central objective of giving mechanical design engineers at the Mechanical Integration Division an automated, multi-alternative tool for spacecraft component placement in place of a slow, manual, single-alternative process.
+
+% ======================================================================
+\begin{thebibliography}{99}
+\bibitem{hansen2016cma} Hansen, N. (2016). \emph{The CMA Evolution Strategy: A Tutorial}. arXiv preprint arXiv:1604.00772.
+\bibitem{storn1997de} Storn, R., \& Price, K. (1997). Differential Evolution -- A Simple and Efficient Heuristic for Global Optimization over Continuous Spaces. \emph{Journal of Global Optimization}, 11(4), 341--359.
+\bibitem{schulman2017ppo} Schulman, J., Wolski, F., Dhariwal, P., Radford, A., \& Klimov, O. (2017). \emph{Proximal Policy Optimization Algorithms}. arXiv preprint arXiv:1707.06347.
+\bibitem{sutton2018rl} Sutton, R. S., \& Barto, A. G. (2018). \emph{Reinforcement Learning: An Introduction} (2nd ed.). MIT Press.
+\bibitem{sechen1985timberwolf} Sechen, C., \& Sangiovanni-Vincentelli, A. (1985). The TimberWolf Placement and Routing Package. \emph{IEEE Journal of Solid-State Circuits}, 20(2), 510--522.
+\bibitem{mirhoseini2021graph} Mirhoseini, A., et al. (2021). A Graph Placement Methodology for Fast Chip Design. \emph{Nature}, 594(7862), 207--212.
+\bibitem{lam2015numba} Lam, S. K., Pitrou, A., \& Seibert, S. (2015). Numba: A JIT Compiler for Python-Driven Array-Oriented Scientific Computing. \emph{Proceedings of the Second Workshop on the LLVM Compiler Infrastructure in HPC (LLVM '15)}, 1--6.
+\bibitem{raffin2021sb3} Raffin, A., et al. (2021). Stable-Baselines3: Reliable Reinforcement Learning Implementations in Python. \emph{Journal of Machine Learning Research}, 22(268), 1--8.
+\end{thebibliography}
+\addcontentsline{toc}{chapter}{References}
+
+% ======================================================================
+\appendix
+\chapter{Selected Code Listings}
+% ======================================================================
+
+\section{DE Solver Invocation and Post-Filtering}
+\begin{lstlisting}[caption={Full DE solver invocation and strict-compliance post-filter (\texttt{DE/de.py})}]
+result = differential_evolution(
+    evaluate, bounds,
+    args=(masses, lengths, widths, clearance, req_d_matrix,
+          flat_offsets, offset_counts, offset_indices,
+          is_back_side, clearance_dirs,
+          panel_width, panel_height, border_spacing),
+    maxiter=600, popsize=25, tol=1e-6,
+    strategy='best1bin', seed=seed,
+    workers=-1, updating='deferred'
+)
+
+# STRICT FILTER: Reject layout solutions containing non-zero
+# penalty scores or numerical anomalies
+if result.fun > 1e-3 or np.any(np.isinf(result.x)) or np.any(np.isnan(result.x)):
+    continue
+
+cx_v = result.x[::2]
+cy_v = result.x[1::2]
+\end{lstlisting}
+
+\section{CMA-ES Solver Configuration}
+\begin{lstlisting}[caption={CMA-ES strategy initialisation (\texttt{CMA-ES/cma-es-local.py})}]
+sigma0 = 15.0  # Initial search step size (standard deviation)
+
+cma_opts = {
+    'popsize': 32,   # Candidate solutions generated per generation
+    # ... bounds, tolerance, and seed options ...
+}
+
+es = cma.CMAEvolutionStrategy(x0, sigma0, cma_opts)
+\end{lstlisting}
+
+\section{PPO Reward Computation (conceptual)}
+\begin{lstlisting}[caption={Composite, log-compressed PPO reward formulation (\texttt{PPO} training notebook)}]
+composite_score = (
+    3.0  * np.log1p(border_penalty)  +
+    3.0  * np.log1p(overlap_penalty) +
+    10.0 * np.log1p(insert_penalty)  +
+    0.5  * np.log1p(cg_penalty)
+)
+
+reward = (prev_composite_score - composite_score) - STEP_COST
+if layout_is_fully_valid:
+    reward += SUCCESS_BONUS
+    terminated = True
+\end{lstlisting}
+
+\section{PPO Command-Line Inference Interface}
+\begin{lstlisting}[language=bash, caption={Standalone multi-layout generation CLI (\texttt{PPO/gen\_from\_inference.py})}]
+python gen_from_inference.py \
+    --json layout1.json \
+    --model_dir optimized_layouts_rl \
+    --output_dir ppo_output \
+    --episodes 800 \
+    --parallel 8 \
+    --max_layouts 5 \
+    --dedup_dist 25.0 \
+    --deterministic \
+    --seed 42
+\end{lstlisting}
+
+\chapter{JSON Configuration Schema (Full)}
+The complete board and component configuration schema, of which Listing~\ref{lst:json_schema} in Chapter~\ref{chap:formulation} is an excerpt, is contained in the project's \texttt{layout1.json} (baseline configuration) and \texttt{layout2.json} (new-layout case study, Chapter~\ref{chap:results}) files, each declaring a \texttt{BOARD} object (length, breadth, weight, border, and clearance in millimetres/kilograms) and a \texttt{COMPONENTS} object split into \texttt{FRONT} and \texttt{BACK} arrays, with each component entry specifying its name, geometry (rectangular length/breadth or circular diameter), mass, insert diameter and quantity, an optional quantity multiplier for repeated identical parts, and an optional directional Connector-Face clearance override, exactly as described in Section~\ref{sec:json_schema}.
+
+\end{document}
